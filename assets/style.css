@@ -32,7 +32,14 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at top, var(--paper) 0%, var(--backdrop) 78%);
+    radial-gradient(ellipse 140% 90% at 50% -10%,
+      #12484d 0%,
+      var(--paper) 26%,
+      #092528 46%,
+      #061a1c 64%,
+      var(--backdrop) 88%,
+      var(--backdrop) 100%);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 16px;
@@ -65,7 +72,7 @@ a:hover, a:focus-visible { text-decoration-color: var(--highlight); }
 }
 .site-nav .mark {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   letter-spacing: 0.08em;
   color: var(--highlight);
   text-decoration: none;
@@ -73,21 +80,26 @@ a:hover, a:focus-visible { text-decoration-color: var(--highlight); }
 }
 .site-nav ul {
   display: flex;
-  gap: 1.25rem;
+  gap: 1.6rem;
   list-style: none;
   margin: 0;
   padding: 0;
   flex-wrap: wrap;
 }
 .site-nav a {
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--ink);
-  opacity: 0.75;
+  opacity: 0.8;
   border-bottom: 1px solid transparent;
-  padding-bottom: 2px;
+  padding: 0.35rem 0;
+}
+@media (min-width: 900px) {
+  .site-nav .mark { font-size: 1.5rem; }
+  .site-nav a { font-size: 1.05rem; }
+  .site-nav ul { gap: 2rem; }
 }
 .site-nav a:hover, .site-nav a[aria-current="page"] {
   opacity: 1;
@@ -159,4 +171,22 @@ footer.site-foot {
 @media (max-width: 480px) {
   .site-nav { padding-top: 1.25rem; }
   .site-nav ul { gap: 0.9rem; }
+}
+
+/* Film grain across the whole page, over the background and the plate alike.
+   feTurbulence keeps it a few hundred bytes and resolution-independent. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after { opacity: 0.32; }
 }
