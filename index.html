@@ -10,9 +10,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <style>
+  /* The stage is taller than the viewport and the plate sticks inside it, so
+     there is room to scroll the animation in place before the page moves on. */
+  .hero-stage {
+    min-height: 200vh;
+    margin: 0 calc(var(--gap) * -1);
+    padding: 0 var(--gap);
+  }
   .hero-wrap {
+    position: sticky;
+    top: 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
     gap: 0;
   }
   .hero {
@@ -48,11 +59,18 @@
   @media (min-width: 900px) {
     /* The plate spans the full viewport width and the text sits on top of it,
        so the field reads as the page's ground, not a picture in a box. */
-    .hero-wrap {
-      position: relative;
-      display: block;
-      min-height: 78vh;
+    .hero-stage {
+      min-height: 260vh;
       margin: 0 calc(50% - 50vw);
+      padding: 0;
+    }
+    .hero-wrap {
+      position: sticky;
+      top: 0;
+      display: block;
+      height: 100vh;
+      min-height: 0;
+      margin: 0;
       padding: 0 calc(50vw - var(--max-w) / 2);
     }
     .hero {
@@ -73,7 +91,7 @@
       position: relative;
       max-width: 30rem;
       margin-left: auto;
-      padding: 13vh 0;
+      padding: 30vh 0;
     }
     h1 { font-size: clamp(2.2rem, 3.4vw, 3.2rem); }
     .lede { max-width: 40ch; font-size: 1.05rem; }
@@ -93,6 +111,7 @@
 </nav>
 
 <main>
+  <div class="hero-stage" id="heroStage">
   <div class="hero-wrap">
     <div class="hero"><canvas id="sigilCanvas"></canvas></div>
     <div class="hero-text">
@@ -100,6 +119,7 @@
       <h1>Etchings, circuits, and things worth keeping.</h1>
       <p class="lede">A small foundry of tools, notes, and whatever else gets made along the way — rendered in brass, teal, and copper trace.</p>
     </div>
+  </div>
   </div>
 
   <hr class="trace-rule">
@@ -114,7 +134,7 @@
 
 <footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
 
-<script src="assets/sigil.js?v=6"></script>
+<script src="assets/sigil.js?v=7"></script>
 <script>
   const canvas = document.getElementById("sigilCanvas");
   const seed = Math.floor(Math.random() * 100000);
@@ -132,7 +152,7 @@
       coreScale: wide ? 0.3 : 0.32,
       cxFrac: wide ? 0.4 : 0.5,
     };
-  });
+  }, { stage: document.getElementById("heroStage"), turns: 2 });
 </script>
 </body>
 </html>

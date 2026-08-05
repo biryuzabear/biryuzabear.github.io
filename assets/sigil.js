@@ -718,8 +718,13 @@ function renderSigilField(canvas, opts) {
 
 /* Live plate: follows pointer, touch and scroll. The scene is replanned only
    on resize; everything else is a repaint on the next animation frame. */
-function createSigilField(canvas, opts) {
+function createSigilField(canvas, opts, motionOpts) {
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const mo = motionOpts || {};
+  // Scroll progress is read from the pinned stage, not the canvas: while the
+  // canvas is stuck to the viewport its own rect never moves.
+  const stage = mo.stage || null;
+  const turns = mo.turns === undefined ? 1.5 : mo.turns;
   let sc = null, ctx = null, dpr = 1;
   let px = 0, py = 0, spin = 0;
   let tpx = 0, tpy = 0, tspin = 0;
@@ -750,7 +755,7 @@ function createSigilField(canvas, opts) {
     frame = 0;
     px += (tpx - px) * 0.08;
     py += (tpy - py) * 0.08;
-    spin += (tspin - spin) * 0.08;
+    spin += (tspin - spin) * 0.16;
     paint(false);
     if (Math.abs(tpx - px) + Math.abs(tpy - py) + Math.abs(tspin - spin) > 0.0015) request();
     else settle();
@@ -765,9 +770,16 @@ function createSigilField(canvas, opts) {
   };
   const onLeave = () => { tpx = 0; tpy = 0; request(); };
   const onScroll = () => {
-    const r = canvas.getBoundingClientRect();
-    const progress = (window.innerHeight - r.top) / (window.innerHeight + r.height);
-    tspin = (Math.max(0, Math.min(1, progress)) - 0.5) * 1.2;
+    let progress;
+    if (stage) {
+      const r = stage.getBoundingClientRect();
+      const travel = Math.max(1, r.height - window.innerHeight);
+      progress = -r.top / travel;
+    } else {
+      const r = canvas.getBoundingClientRect();
+      progress = (window.innerHeight - r.top) / (window.innerHeight + r.height);
+    }
+    tspin = (Math.max(0, Math.min(1, progress)) - 0.5) * turns * Math.PI * 2;
     request();
   };
   const onResize = () => plan();
