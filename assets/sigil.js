@@ -766,7 +766,7 @@ function createSigilField(canvas, opts, motionOpts) {
   // Scroll progress is read from the pinned stage, not the canvas: while the
   // canvas is stuck to the viewport its own rect never moves.
   const stage = mo.stage || null;
-  const turns = mo.turns === undefined ? 1.5 : mo.turns;
+  const turnsOf = () => (typeof mo.turns === "function" ? mo.turns() : mo.turns === undefined ? 1.5 : mo.turns);
   let sc = null, ctx = null, dpr = 1;
   let px = 0, py = 0, spin = 0;
   let tpx = 0, tpy = 0, tspin = 0;
@@ -821,7 +821,7 @@ function createSigilField(canvas, opts, motionOpts) {
       const r = canvas.getBoundingClientRect();
       progress = (window.innerHeight - r.top) / (window.innerHeight + r.height);
     }
-    tspin = (Math.max(0, Math.min(1, progress)) - 0.5) * turns * Math.PI * 2;
+    tspin = (Math.max(0, Math.min(1, progress)) - 0.5) * turnsOf() * Math.PI * 2;
     request();
   };
   const onResize = () => plan();

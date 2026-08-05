@@ -13,7 +13,7 @@
   /* The stage is taller than the viewport and the plate sticks inside it, so
      there is room to scroll the animation in place before the page moves on. */
   .hero-stage {
-    min-height: 165vh;
+    min-height: 210vh;
     margin: 0 calc(var(--gap) * -1);
     padding: 0 var(--gap);
   }
@@ -154,7 +154,7 @@
 
 <footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
 
-<script src="assets/sigil.js?v=9"></script>
+<script src="assets/sigil.js?v=11"></script>
 <script>
   const canvas = document.getElementById("sigilCanvas");
   const seed = Math.floor(Math.random() * 100000);
@@ -172,7 +172,10 @@
       coreScale: wide ? 0.26 : 0.28,
       cxFrac: wide ? 0.4 : 0.5,
     };
-  }, { stage: document.getElementById("heroStage"), turns: 2 });
+  }, {
+    stage: document.getElementById("heroStage"),
+    turns: () => (window.innerWidth >= 900 ? 2 : 1.25),
+  });
 </script>
 </body>
 </html>
