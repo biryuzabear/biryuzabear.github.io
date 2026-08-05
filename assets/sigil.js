@@ -534,7 +534,7 @@ function drawGlitter(ctx, cx, cy, radius, seed, color, count) {
     ctx.globalAlpha = 0.3 + rng() * 0.55;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(cx + rr * Math.cos(ang), cy + rr * Math.sin(ang), radius * (0.004 + rng() * 0.008), 0, Math.PI * 2);
+    ctx.arc(cx + rr * Math.cos(ang), cy + rr * Math.sin(ang), radius * (0.002 + rng() * 0.006), 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -604,7 +604,7 @@ function renderSigilField(canvas, opts) {
   const viaR = Math.max(2.2, R * 0.032);
 
   const sats = planSatellites(seed, satCount, cx, cy, R + 40 * u, 1.0, 0.5, -18, 0.55, u)
-    .filter((s) => s.x > -s.r && s.x < w + s.r && s.y > -s.r && s.y < h + s.r);
+    .filter((s) => s.x - s.r > 2 && s.x + s.r < w - 2 && s.y - s.r > 2 && s.y + s.r < h - 2);
 
   const env = {
     u, w, h, cx, cy,
@@ -625,7 +625,7 @@ function renderSigilField(canvas, opts) {
   const traceData = tracePrims(seed, sats, viaR, env, edgeCount, sats.length, 3);
   ctx.save();
   ctx.globalAlpha = 0.55;
-  renderPrims(ctx, traceData.prims, metal(ink, 0, 0, w, h, 0.45, 3), lw * 0.6);
+  renderPrims(ctx, traceData.prims, metal(ink, 0, 0, w, h, 0.3, 2), lw * 0.6);
   ctx.restore();
 
   /* silkscreen designators at net anchors */
@@ -673,15 +673,15 @@ function renderSigilField(canvas, opts) {
     renderPrims(
       ctx,
       satPr.filter((p) => p.t !== "punchPoly" && p.t !== "punchCircle"),
-      metal(ink, -s.r, -s.r, s.r, s.r, 0.45, 2),
+      metal(ink, -s.r, -s.r, s.r, s.r, 0.3, 2),
       lw * 0.75
     );
     ctx.restore();
   }
 
   /* core circle — gradient built in local coords so it lands on the circle */
-  drawAlchemyCircleAt(ctx, cx, cy, R, seed, metal(highlight, -R, -R, R, R, 0.6, 4), lw * 1.35);
-  drawGlitter(ctx, cx, cy, R, seed, highlight, 26);
+  drawAlchemyCircleAt(ctx, cx, cy, R, seed, metal(highlight, -R, -R, R, R, 0.34, 2), lw * 1.35);
+  drawGlitter(ctx, cx, cy, R, seed, highlight, 20);
 
   /* symbol ring, each glyph tangent to the orbit */
   if (symRingCount > 0) {
@@ -692,7 +692,7 @@ function renderSigilField(canvas, opts) {
       ctx.save();
       ctx.translate(cx + p.x, cy + p.y);
       ctx.rotate(p.ang + Math.PI / 2);
-      drawSymbolIdx(ctx, p.i, symSize, metal(highlight, -symSize, -symSize, symSize, symSize, 0.5, 2), lw * 0.75);
+      drawSymbolIdx(ctx, p.i, symSize, metal(highlight, -symSize, -symSize, symSize, symSize, 0.34, 2), lw * 0.75);
       ctx.restore();
     }
     ctx.restore();
