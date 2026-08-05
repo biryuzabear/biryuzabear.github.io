@@ -508,6 +508,35 @@ function drawGrain(canvas, ctx, seed, amount, cell) {
   ctx.putImageData(img, 0, 0);
 }
 
+/* The main circle is a rim around a well, not a bare web — the generator
+   punches a disc out of the centre and sets an object in it. Without this the
+   sigil's inner spokes read as lopsided clutter. */
+function drawPlaceholderGear(ctx, cx, cy, r, color, lineWidth) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  const teeth = 10;
+  ctx.beginPath();
+  for (let i = 0; i < teeth * 2; i++) {
+    const rr = i % 2 === 0 ? r : r * 0.82;
+    const ang = (Math.PI / teeth) * i;
+    const x = cx + rr * Math.cos(ang);
+    const y = cy + rr * Math.sin(ang);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.42, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.14, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 5; i++) {
+    const ang = ((Math.PI * 2) / 5) * i - Math.PI / 2;
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.28 * Math.cos(ang), cy + r * 0.28 * Math.sin(ang), r * 0.045, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function fitCanvas(canvas) {
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   const w = canvas.clientWidth || canvas.width;
@@ -523,41 +552,50 @@ function fitCanvas(canvas) {
 
 /* Layer order mirrors renderCard: PCB nets underneath, then designators, then
    satellites, then the core circle, glitter, symbol ring, and grain on top. */
-function renderSigilField(canvas, opts) {
+/* The scene is planned once (routing is the expensive part) and repainted
+   cheaply, so pointer and scroll can move the layers at frame rate. */
+function planScene(w, h, opts) {
   const o = opts || {};
-  const seed = o.seed === undefined ? 1 : o.seed;
-  const ink = o.ink || "#c17a4a";
-  const highlight = o.highlight || "#e0996a";
-  const voidCol = o.void || "#061a1c";
-  const satCount = o.satellites === undefined ? 6 : o.satellites;
+  const sc = {
+    w, h,
+    seed: o.seed === undefined ? 1 : o.seed,
+    ink: o.ink || "#c17a4a",
+    highlight: o.highlight || "#e0996a",
+    voidCol: o.void || "#061a1c",
+    grain: o.grain === undefined ? 0.16 : o.grain,
+  };
+  const seed = sc.seed;
+  const satCount = o.satellites === undefined ? 8 : o.satellites;
   const scatterCount = o.scatter === undefined ? 0 : o.scatter;
   const edgeCount = o.edges === undefined ? 5 : o.edges;
   const labelCount = o.labels === undefined ? 6 : o.labels;
-  const grainAmt = o.grain === undefined ? 0.16 : o.grain;
-  const coreScale = o.coreScale === undefined ? 0.3 : o.coreScale;
+  const coreScale = o.coreScale === undefined ? 0.32 : o.coreScale;
+  const detailRatio = o.detailRatio === undefined ? 0.56 : o.detailRatio;
   const cxFrac = o.cxFrac === undefined ? 0.5 : o.cxFrac;
 
-  const { ctx, w, h, dpr } = fitCanvas(canvas);
-  ctx.clearRect(0, 0, w, h);
   const cx = w * cxFrac, cy = h / 2;
-  // Line weight is a fraction of the plate, not of the circle it belongs to —
-  // exactly as the generator does it. Tying it to the radius makes small
-  // circles fat and buries their detail.
   const u = Math.min(w, h) / 640;
   const R = Math.min(w, h) * coreScale;
-  const lw = 1.6 * u;
-  const satLw = 1.1 * u;
+  Object.assign(sc, {
+    cx, cy, u, R,
+    lw: 1.6 * u,
+    satLw: 1.1 * u,
+    detailR: R * detailRatio,
+  });
   const viaR = Math.max(2, 2.5 * u);
 
   const inside = (s) => s.x - s.r > 2 && s.x + s.r < w - 2 && s.y - s.r > 2 && s.y + s.r < h - 2;
   const sats = planSatellites(seed, satCount, cx, cy, R + 40 * u, 1.0, 0.5, -18, 0.55, u).filter(inside);
-  // Extra circles scattered across the whole plate so a wide canvas reads as a
-  // field rather than one motif marooned in the middle.
+  // Extra circles across the whole plate so a wide canvas reads as a field
+  // rather than one motif marooned in the middle. Placement is biased away
+  // from the core's own side so the far half doesn't come out empty.
   if (scatterCount > 0) {
     const rng = mulberry32(seed * 31 + 1777);
-    for (let i = 0, guard = 0; i < scatterCount && guard < scatterCount * 40; guard++) {
+    for (let i = 0, guard = 0; i < scatterCount && guard < scatterCount * 60; guard++) {
       const r = (14 + rng() * 26) * u;
-      const c = { x: rng() * w, y: rng() * h, r, seed: Math.floor(rng() * 999999), t: rng() * 0.5, rot: rng() * Math.PI * 2 };
+      const bias = rng();
+      const x = (bias < 0.55 ? 0.45 + rng() * 0.55 : rng()) * w;
+      const c = { x, y: rng() * h, r, seed: Math.floor(rng() * 999999), t: rng() * 0.5, rot: rng() * Math.PI * 2 };
       if (!inside(c)) continue;
       if (Math.hypot(c.x - cx, c.y - cy) < R + c.r + 16 * u) continue;
       if (sats.some((p) => Math.hypot(c.x - p.x, c.y - p.y) < (c.r + p.r) * 1.15)) continue;
@@ -565,6 +603,7 @@ function renderSigilField(canvas, opts) {
       i++;
     }
   }
+  sc.sats = sats.map((s) => ({ ...s, prims: alchemyPrimitives(s.r, s.seed) }));
 
   const env = {
     u, w, h, cx, cy,
@@ -577,50 +616,64 @@ function renderSigilField(canvas, opts) {
     rects: [],
     sats,
   };
+  const traceData = tracePrims(seed, sats, viaR, env, edgeCount, sats.length, 3);
+  sc.tracePrims = traceData.prims;
+  sc.corePrims = alchemyPrimitives(R, seed);
 
+  const size = Math.max(6, R * 0.055);
+  sc.labelSize = size;
+  sc.labels = labelCount > 0
+    ? planTraceLabels(traceData.anchors, labelCount, seed, env, size)
+        .map((d) => ({ x: d.x, y: d.y, text: REFDES[d.sym % REFDES.length] + d.num }))
+    : [];
+  return sc;
+}
+
+/* Layer order mirrors renderCard: PCB nets underneath, then designators, then
+   satellites, then the core circle, its well, and grain on top. Motion offsets
+   are per-layer so the plate gains depth instead of sliding as one picture. */
+function paintScene(ctx, sc, motion) {
+  const m = motion || {};
+  const px = m.px || 0, py = m.py || 0, spin = m.spin || 0;
+  const { w, h, cx, cy, R, u, lw, satLw, ink, highlight, voidCol, detailR } = sc;
+  const depth = 14 * u;
+
+  ctx.clearRect(0, 0, w, h);
   const metal = (color, x0, y0, x1, y1, amt, bands) =>
     metallicGradient(ctx, color, x0, y0, x1, y1, amt, bands);
 
-  /* PCB layer */
-  const traceData = tracePrims(seed, sats, viaR, env, edgeCount, sats.length, 3);
   ctx.save();
-  ctx.globalAlpha = 0.55;
-  renderPrims(ctx, traceData.prims, metal(ink, 0, 0, w, h, 0.3, 2), lw * 0.6);
-  ctx.restore();
-
-  /* silkscreen designators at net anchors */
-  if (labelCount > 0) {
-    const size = Math.max(6, R * 0.055);
-    ctx.save();
-    ctx.globalAlpha = 0.7;
-    ctx.font = `500 ${size}px ${getComputedStyle(document.documentElement).getPropertyValue("--font-mono") || "monospace"}`;
+  ctx.translate(px * depth * 0.35, py * depth * 0.35);
+  ctx.globalAlpha = 0.6;
+  renderPrims(ctx, sc.tracePrims, metal(ink, 0, 0, w, h, 0.3, 2), lw * 0.6);
+  ctx.globalAlpha = 0.7;
+  if (sc.labels.length) {
+    ctx.font = `500 ${sc.labelSize}px ui-monospace, monospace`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = ink;
-    for (const d of planTraceLabels(traceData.anchors, labelCount, seed, env, size)) {
-      ctx.fillText(REFDES[d.sym % REFDES.length] + d.num, d.x, d.y);
-    }
-    ctx.restore();
+    for (const d of sc.labels) ctx.fillText(d.text, d.x, d.y);
   }
+  ctx.restore();
 
-  /* satellites — punched shapes filled with void first, then stroked */
-  for (const s of sats) {
+  ctx.save();
+  ctx.translate(px * depth, py * depth);
+  for (const s of sc.sats) {
     ctx.save();
-    ctx.globalAlpha = 0.5 * (0.45 + s.t * 0.55);
+    ctx.globalAlpha = 0.32 * (0.5 + s.t * 0.5);
     ctx.translate(s.x, s.y);
-    ctx.rotate(s.rot);
-    const satPr = alchemyPrimitives(s.r, s.seed);
+    ctx.rotate(s.rot + spin * (0.5 + s.t));
     ctx.save();
     ctx.globalAlpha *= 0.85;
     ctx.fillStyle = voidCol;
-    for (const p of satPr) {
+    for (const p of s.prims) {
       if (p.t === "punchCircle") {
         ctx.beginPath();
         ctx.arc(p.c[0], p.c[1], p.r, 0, Math.PI * 2);
         ctx.fill();
       } else if (p.t === "punchPoly") {
         ctx.beginPath();
-        p.pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+        p.pts.forEach(([qx, qy], i) => (i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy)));
         ctx.closePath();
         ctx.fill();
       }
@@ -628,21 +681,124 @@ function renderSigilField(canvas, opts) {
     ctx.restore();
     renderPrims(
       ctx,
-      satPr.filter((p) => p.t !== "punchPoly" && p.t !== "punchCircle"),
+      s.prims.filter((p) => p.t !== "punchPoly" && p.t !== "punchCircle"),
       metal(ink, -s.r, -s.r, s.r, s.r, 0.3, 2),
       satLw
     );
     ctx.restore();
   }
+  ctx.restore();
 
-  /* core circle — gradient built in local coords so it lands on the circle */
-  drawAlchemyCircleAt(ctx, cx, cy, R, seed, metal(highlight, -R, -R, R, R, 0.34, 2), lw);
-  drawGlitter(ctx, cx, cy, R, seed, highlight, 20);
+  ctx.save();
+  ctx.translate(cx + px * depth * 0.2, cy + py * depth * 0.2);
+  ctx.rotate(spin * 0.3);
+  renderPrims(ctx, sc.corePrims, metal(highlight, -R, -R, R, R, 0.34, 2), lw);
+  drawGlitter(ctx, 0, 0, R, sc.seed, highlight, 20);
 
-  drawGrain(canvas, ctx, seed, grainAmt, 2.5 * dpr);
+  /* detail well — cleared so the page ground shows through, then its object */
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(0, 0, detailR * 1.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  ctx.rotate(-spin * 0.9);
+  drawPlaceholderGear(ctx, 0, 0, detailR * 0.92,
+    metal(highlight, -detailR, -detailR, detailR, detailR, 0.34, 2), lw);
+  ctx.restore();
+}
+
+function renderSigilField(canvas, opts) {
+  const { ctx, w, h, dpr } = fitCanvas(canvas);
+  const sc = planScene(w, h, opts);
+  paintScene(ctx, sc, null);
+  drawGrain(canvas, ctx, sc.seed, sc.grain, 2.5 * dpr);
+  return sc;
+}
+
+/* Live plate: follows pointer, touch and scroll. The scene is replanned only
+   on resize; everything else is a repaint on the next animation frame. */
+function createSigilField(canvas, opts) {
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let sc = null, ctx = null, dpr = 1;
+  let px = 0, py = 0, spin = 0;
+  let tpx = 0, tpy = 0, tspin = 0;
+  let frame = 0, settleTimer = 0;
+
+  const plan = () => {
+    const fit = fitCanvas(canvas);
+    ctx = fit.ctx;
+    dpr = fit.dpr;
+    sc = planScene(fit.w, fit.h, typeof opts === "function" ? opts(fit.w, fit.h) : opts);
+    paint(true);
+  };
+
+  // Grain is a full-canvas getImageData pass, far too slow per frame — it is
+  // applied only once the plate comes to rest.
+  const settle = () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => sc && drawGrain(canvas, ctx, sc.seed, sc.grain, 2.5 * dpr), 140);
+  };
+
+  const paint = (withGrain) => {
+    if (!sc) return;
+    paintScene(ctx, sc, { px, py, spin });
+    if (withGrain) settle();
+  };
+
+  const tick = () => {
+    frame = 0;
+    px += (tpx - px) * 0.08;
+    py += (tpy - py) * 0.08;
+    spin += (tspin - spin) * 0.08;
+    paint(false);
+    if (Math.abs(tpx - px) + Math.abs(tpy - py) + Math.abs(tspin - spin) > 0.0015) request();
+    else settle();
+  };
+  const request = () => { if (!frame) frame = requestAnimationFrame(tick); };
+
+  const onPointer = (e) => {
+    const r = canvas.getBoundingClientRect();
+    tpx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
+    tpy = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));
+    request();
+  };
+  const onLeave = () => { tpx = 0; tpy = 0; request(); };
+  const onScroll = () => {
+    const r = canvas.getBoundingClientRect();
+    const progress = (window.innerHeight - r.top) / (window.innerHeight + r.height);
+    tspin = (Math.max(0, Math.min(1, progress)) - 0.5) * 1.2;
+    request();
+  };
+  const onResize = () => plan();
+
+  plan();
+  if (!still) {
+    window.addEventListener("pointermove", onPointer, { passive: true });
+    window.addEventListener("pointerdown", onPointer, { passive: true });
+    window.addEventListener("touchmove", (e) => e.touches[0] && onPointer(e.touches[0]), { passive: true });
+    window.addEventListener("pointerleave", onLeave, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+  window.addEventListener("resize", onResize);
+
+  return {
+    replan: plan,
+    destroy() {
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(frame);
+      clearTimeout(settleTimer);
+    },
+  };
 }
 
 window.Cindersmith = {
   mulberry32, alchemyPrimitives, renderPrims, drawAlchemyCircleAt,
-  planSatellites, tracePrims, renderSigilField,
+  planSatellites, tracePrims, planScene, paintScene,
+  renderSigilField, createSigilField,
 };

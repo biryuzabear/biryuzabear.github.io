@@ -66,7 +66,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent 22%, var(--backdrop) 62%);
+      background: linear-gradient(90deg, transparent 40%, var(--backdrop) 86%);
       pointer-events: none;
     }
     .hero-text {
@@ -114,27 +114,25 @@
 
 <footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
 
-<script src="assets/sigil.js?v=5"></script>
+<script src="assets/sigil.js?v=6"></script>
 <script>
   const canvas = document.getElementById("sigilCanvas");
   const seed = Math.floor(Math.random() * 100000);
   const styles = getComputedStyle(document.documentElement);
   const ink = styles.getPropertyValue("--ink").trim();
   const highlight = styles.getPropertyValue("--highlight").trim();
-  function draw() {
-    const wide = window.innerWidth >= 900;
-    Cindersmith.renderSigilField(canvas, {
+  Cindersmith.createSigilField(canvas, (w) => {
+    const wide = w >= 900;
+    return {
       seed, ink, highlight,
-      satellites: wide ? 10 : 6,
-      scatter: wide ? 14 : 3,
-      edges: wide ? 9 : 4,
-      labels: wide ? 12 : 5,
-      coreScale: wide ? 0.22 : 0.3,
-      cxFrac: wide ? 0.34 : 0.5,
-    });
-  }
-  draw();
-  window.addEventListener("resize", draw);
+      satellites: wide ? 7 : 6,
+      scatter: wide ? 5 : 2,
+      edges: wide ? 7 : 4,
+      labels: wide ? 9 : 5,
+      coreScale: wide ? 0.3 : 0.32,
+      cxFrac: wide ? 0.4 : 0.5,
+    };
+  });
 </script>
 </body>
 </html>
