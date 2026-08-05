@@ -183,46 +183,6 @@ function drawAlchemyCircleAt(ctx, cx, cy, radius, seed, color, lineWidth) {
   ctx.restore();
 }
 
-/* ---------- alchemical symbols (subset, ported from SYMBOL_SHAPES) ---------- */
-const _L = (x1, y1, x2, y2) => ({ t: "line", a: [x1, y1, x2, y2] });
-const _C = (x, y, r) => ({ t: "circle", c: [x, y], r });
-const _D = (x, y, r) => ({ t: "dot", c: [x, y], r });
-const PI = Math.PI;
-const TRI_UP = [[0, -0.85], [0.8, 0.55], [-0.8, 0.55]];
-const TRI_DOWN = [[0, 0.85], [0.8, -0.55], [-0.8, -0.55]];
-
-const SYMBOL_SHAPES = [
-  () => [{ t: "poly", pts: TRI_UP }],
-  () => [{ t: "poly", pts: TRI_DOWN }],
-  () => [{ t: "poly", pts: TRI_UP }, _L(-0.42, 0.02, 0.42, 0.02)],
-  () => [_C(0, 0, 0.8), _D(0, 0, 0.15)],
-  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0)],
-  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0), _L(0, -0.8, 0, 0.8)],
-  () => [_C(-0.14, 0.2, 0.44), _L(0.17, -0.11, 0.72, -0.66), _L(0.72, -0.66, 0.36, -0.66), _L(0.72, -0.66, 0.72, -0.3)],
-  () => [_L(-0.18, -0.72, -0.18, 0.28), _L(-0.6, -0.36, 0.24, -0.36)],
-  () => [_C(0, 0, 0.8), _L(-0.56, -0.56, 0.56, 0.56), _L(-0.56, 0.56, 0.56, -0.56)],
-  () => [{ t: "poly", pts: [[0, -0.95], [0.5, 0.69], [-0.81, -0.26], [0.81, -0.26], [-0.5, 0.69]] }],
-];
-
-function scalePrims(prims, s) {
-  return prims.map((p) => {
-    const q = { t: p.t };
-    if (p.c) q.c = [p.c[0] * s, p.c[1] * s];
-    if (p.r !== undefined) q.r = p.r * s;
-    if (p.a) q.a = p.a.map((v) => v * s);
-    if (p.pts) q.pts = p.pts.map(([x, y]) => [x * s, y * s]);
-    return q;
-  });
-}
-
-function drawSymbolAt(ctx, cx, cy, r, seed, color, lineWidth) {
-  const shape = SYMBOL_SHAPES[Math.floor(mulberry32(seed)() * SYMBOL_SHAPES.length)];
-  ctx.save();
-  ctx.translate(cx, cy);
-  renderPrims(ctx, scalePrims(shape(), r), color, lineWidth);
-  ctx.restore();
-}
-
 /* ---------- metallic sheen (ported from shadeHex/shineStops/paint) ---------- */
 function hexToRgb(hex) {
   const v = hex.replace("#", "");
@@ -474,7 +434,7 @@ function planTraceLabels(anchors, count, seed, env, size) {
       if (Math.hypot(x + w / 2 - env.cx, y - env.cy) < env.ringOut + w / 2) continue;
       if (env.sats.some((s) => Math.hypot(x + w / 2 - s.x, y - s.y) < s.r * 1.2 + w / 2)) continue;
       if (out.some((o) => Math.abs(o.x - x) < w * 1.2 && Math.abs(o.y - y) < h * 1.6)) continue;
-      out.push({ x, y, sym: Math.floor(rng() * SYMBOL_SHAPES.length), num: 1 + Math.floor(rng() * 98) });
+      out.push({ x, y, sym: Math.floor(rng() * 10), num: 1 + Math.floor(rng() * 98) });
       break;
     }
   }
@@ -505,24 +465,7 @@ function planSatellites(seed, count, cx, cy, orbitR, sizeScale, sizeVar, angleOf
   return out;
 }
 
-function planSymbolRing(seed, count, radius, rot) {
-  const rng = mulberry32(seed + 7717);
-  const out = [];
-  const pool = [...Array(SYMBOL_SHAPES.length).keys()];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  for (let i = 0; i < count; i++) {
-    const a = ((Math.PI * 2) / count) * i - Math.PI / 2 + rot;
-    out.push({ x: radius * Math.cos(a), y: radius * Math.sin(a), ang: a, i: pool[i % pool.length] });
-  }
-  return out;
-}
-
-function drawSymbolIdx(ctx, i, r, color, lineWidth) {
-  renderPrims(ctx, scalePrims(SYMBOL_SHAPES[i % SYMBOL_SHAPES.length](), r), color, lineWidth);
-}
+const REFDES = ["R", "C", "U", "Q", "D", "L", "TP", "J", "Y", "FB"];
 
 /* ---------- surface texture ---------- */
 function drawGlitter(ctx, cx, cy, radius, seed, color, count) {
@@ -587,24 +530,41 @@ function renderSigilField(canvas, opts) {
   const highlight = o.highlight || "#e0996a";
   const voidCol = o.void || "#061a1c";
   const satCount = o.satellites === undefined ? 6 : o.satellites;
+  const scatterCount = o.scatter === undefined ? 0 : o.scatter;
   const edgeCount = o.edges === undefined ? 5 : o.edges;
   const labelCount = o.labels === undefined ? 6 : o.labels;
-  const symRingCount = o.symRing === undefined ? 8 : o.symRing;
   const grainAmt = o.grain === undefined ? 0.16 : o.grain;
+  const coreScale = o.coreScale === undefined ? 0.3 : o.coreScale;
+  const cxFrac = o.cxFrac === undefined ? 0.5 : o.cxFrac;
 
   const { ctx, w, h, dpr } = fitCanvas(canvas);
   ctx.clearRect(0, 0, w, h);
-  const cx = w / 2, cy = h / 2;
-  const R = Math.min(w, h) * 0.3;
-  const u = R / 200;
-  // One stroke weight for the whole plate; every layer is a fixed ratio of it,
-  // so nothing reads heavier than its place in the stack. Vias stay clearly
-  // wider than the trace that feeds them or they collapse into blobs.
-  const lw = Math.max(1, R * 0.016);
-  const viaR = Math.max(2.2, R * 0.032);
+  const cx = w * cxFrac, cy = h / 2;
+  // Line weight is a fraction of the plate, not of the circle it belongs to —
+  // exactly as the generator does it. Tying it to the radius makes small
+  // circles fat and buries their detail.
+  const u = Math.min(w, h) / 640;
+  const R = Math.min(w, h) * coreScale;
+  const lw = 1.6 * u;
+  const satLw = 1.1 * u;
+  const viaR = Math.max(2, 2.5 * u);
 
-  const sats = planSatellites(seed, satCount, cx, cy, R + 40 * u, 1.0, 0.5, -18, 0.55, u)
-    .filter((s) => s.x - s.r > 2 && s.x + s.r < w - 2 && s.y - s.r > 2 && s.y + s.r < h - 2);
+  const inside = (s) => s.x - s.r > 2 && s.x + s.r < w - 2 && s.y - s.r > 2 && s.y + s.r < h - 2;
+  const sats = planSatellites(seed, satCount, cx, cy, R + 40 * u, 1.0, 0.5, -18, 0.55, u).filter(inside);
+  // Extra circles scattered across the whole plate so a wide canvas reads as a
+  // field rather than one motif marooned in the middle.
+  if (scatterCount > 0) {
+    const rng = mulberry32(seed * 31 + 1777);
+    for (let i = 0, guard = 0; i < scatterCount && guard < scatterCount * 40; guard++) {
+      const r = (14 + rng() * 26) * u;
+      const c = { x: rng() * w, y: rng() * h, r, seed: Math.floor(rng() * 999999), t: rng() * 0.5, rot: rng() * Math.PI * 2 };
+      if (!inside(c)) continue;
+      if (Math.hypot(c.x - cx, c.y - cy) < R + c.r + 16 * u) continue;
+      if (sats.some((p) => Math.hypot(c.x - p.x, c.y - p.y) < (c.r + p.r) * 1.15)) continue;
+      sats.push(c);
+      i++;
+    }
+  }
 
   const env = {
     u, w, h, cx, cy,
@@ -636,13 +596,9 @@ function renderSigilField(canvas, opts) {
     ctx.font = `500 ${size}px ${getComputedStyle(document.documentElement).getPropertyValue("--font-mono") || "monospace"}`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
+    ctx.fillStyle = ink;
     for (const d of planTraceLabels(traceData.anchors, labelCount, seed, env, size)) {
-      ctx.save();
-      ctx.translate(d.x, d.y);
-      drawSymbolIdx(ctx, d.sym, size * 0.42, ink, lw * 0.55);
-      ctx.fillStyle = ink;
-      ctx.fillText(String(d.num).padStart(2, "0"), size * 0.75, 0);
-      ctx.restore();
+      ctx.fillText(REFDES[d.sym % REFDES.length] + d.num, d.x, d.y);
     }
     ctx.restore();
   }
@@ -650,7 +606,7 @@ function renderSigilField(canvas, opts) {
   /* satellites — punched shapes filled with void first, then stroked */
   for (const s of sats) {
     ctx.save();
-    ctx.globalAlpha = 0.9 * (0.5 + s.t * 0.5);
+    ctx.globalAlpha = 0.5 * (0.45 + s.t * 0.55);
     ctx.translate(s.x, s.y);
     ctx.rotate(s.rot);
     const satPr = alchemyPrimitives(s.r, s.seed);
@@ -674,29 +630,14 @@ function renderSigilField(canvas, opts) {
       ctx,
       satPr.filter((p) => p.t !== "punchPoly" && p.t !== "punchCircle"),
       metal(ink, -s.r, -s.r, s.r, s.r, 0.3, 2),
-      lw * 0.75
+      satLw
     );
     ctx.restore();
   }
 
   /* core circle — gradient built in local coords so it lands on the circle */
-  drawAlchemyCircleAt(ctx, cx, cy, R, seed, metal(highlight, -R, -R, R, R, 0.34, 2), lw * 1.35);
+  drawAlchemyCircleAt(ctx, cx, cy, R, seed, metal(highlight, -R, -R, R, R, 0.34, 2), lw);
   drawGlitter(ctx, cx, cy, R, seed, highlight, 20);
-
-  /* symbol ring, each glyph tangent to the orbit */
-  if (symRingCount > 0) {
-    const symSize = R * 0.11;
-    ctx.save();
-    ctx.globalAlpha = 0.9;
-    for (const p of planSymbolRing(seed, symRingCount, R * 1.22, 0)) {
-      ctx.save();
-      ctx.translate(cx + p.x, cy + p.y);
-      ctx.rotate(p.ang + Math.PI / 2);
-      drawSymbolIdx(ctx, p.i, symSize, metal(highlight, -symSize, -symSize, symSize, symSize, 0.34, 2), lw * 0.75);
-      ctx.restore();
-    }
-    ctx.restore();
-  }
 
   drawGrain(canvas, ctx, seed, grainAmt, 2.5 * dpr);
 }
