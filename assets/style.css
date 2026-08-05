@@ -31,15 +31,6 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 140% 90% at 50% -10%,
-      #12484d 0%,
-      var(--paper) 26%,
-      #092528 46%,
-      #061a1c 64%,
-      var(--backdrop) 88%,
-      var(--backdrop) 100%);
-  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 16px;
@@ -173,16 +164,32 @@ footer.site-foot {
   .site-nav ul { gap: 0.9rem; }
 }
 
-/* Film grain across the whole page, over the background and the plate alike.
-   feTurbulence keeps it a few hundred bytes and resolution-independent. */
+/* Ground and grain are both fixed layers rather than body backgrounds:
+   `background-attachment: fixed` is unreliable on iOS Safari, and a blend mode
+   with no backdrop to composite against paints a flat rectangle. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 140% 90% at 50% -10%,
+      #12484d 0%,
+      var(--paper) 26%,
+      #092528 46%,
+      #061a1c 64%,
+      var(--backdrop) 88%,
+      var(--backdrop) 100%);
+}
+
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 60;
   pointer-events: none;
-  opacity: 0.34;
-  mix-blend-mode: overlay;
+  opacity: 0.28;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
