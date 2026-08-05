@@ -465,7 +465,43 @@ function planSatellites(seed, count, cx, cy, orbitR, sizeScale, sizeVar, angleOf
   return out;
 }
 
-const REFDES = ["R", "C", "U", "Q", "D", "L", "TP", "J", "Y", "FB"];
+/* ---------- alchemical symbols (subset, ported from SYMBOL_SHAPES) ----------
+   Kept for the silkscreen designators: a glyph plus a number reads better
+   there than a bare refdes, which is how the generator marks them too. */
+const _L = (x1, y1, x2, y2) => ({ t: "line", a: [x1, y1, x2, y2] });
+const _C = (x, y, r) => ({ t: "circle", c: [x, y], r });
+const _D = (x, y, r) => ({ t: "dot", c: [x, y], r });
+const TRI_UP = [[0, -0.85], [0.8, 0.55], [-0.8, 0.55]];
+const TRI_DOWN = [[0, 0.85], [0.8, -0.55], [-0.8, -0.55]];
+
+const SYMBOL_SHAPES = [
+  () => [{ t: "poly", pts: TRI_UP }],
+  () => [{ t: "poly", pts: TRI_DOWN }],
+  () => [{ t: "poly", pts: TRI_UP }, _L(-0.42, 0.02, 0.42, 0.02)],
+  () => [_C(0, 0, 0.8), _D(0, 0, 0.15)],
+  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0)],
+  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0), _L(0, -0.8, 0, 0.8)],
+  () => [_C(-0.14, 0.2, 0.44), _L(0.17, -0.11, 0.72, -0.66), _L(0.72, -0.66, 0.36, -0.66), _L(0.72, -0.66, 0.72, -0.3)],
+  () => [_L(-0.18, -0.72, -0.18, 0.28), _L(-0.6, -0.36, 0.24, -0.36)],
+  () => [_C(0, 0, 0.8), _L(-0.56, -0.56, 0.56, 0.56), _L(-0.56, 0.56, 0.56, -0.56)],
+  () => [{ t: "poly", pts: [[0, -0.95], [0.5, 0.69], [-0.81, -0.26], [0.81, -0.26], [-0.5, 0.69]] }],
+];
+
+function scalePrims(prims, sf) {
+  return prims.map((p) => {
+    const q = { t: p.t };
+    if (p.c) q.c = [p.c[0] * sf, p.c[1] * sf];
+    if (p.r !== undefined) q.r = p.r * sf;
+    if (p.a) q.a = p.a.map((v) => v * sf);
+    if (p.pts) q.pts = p.pts.map(([x, y]) => [x * sf, y * sf]);
+    return q;
+  });
+}
+
+function drawSymbolIdx(ctx, i, r, color, lineWidth) {
+  renderPrims(ctx, scalePrims(SYMBOL_SHAPES[i % SYMBOL_SHAPES.length](), r), color, lineWidth);
+}
+
 
 /* ---------- surface texture ---------- */
 function drawGlitter(ctx, cx, cy, radius, seed, color, count) {
@@ -624,7 +660,7 @@ function planScene(w, h, opts) {
   sc.labelSize = size;
   sc.labels = labelCount > 0
     ? planTraceLabels(traceData.anchors, labelCount, seed, env, size)
-        .map((d) => ({ x: d.x, y: d.y, text: REFDES[d.sym % REFDES.length] + d.num }))
+        .map((d) => ({ x: d.x, y: d.y, sym: d.sym, text: String(d.num).padStart(2, "0") }))
     : [];
   return sc;
 }
@@ -652,7 +688,13 @@ function paintScene(ctx, sc, motion) {
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = ink;
-    for (const d of sc.labels) ctx.fillText(d.text, d.x, d.y);
+    for (const d of sc.labels) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      drawSymbolIdx(ctx, d.sym, sc.labelSize * 0.42, ink, sc.lw * 0.6);
+      ctx.fillText(d.text, sc.labelSize * 0.75, 0);
+      ctx.restore();
+    }
   }
   ctx.restore();
 

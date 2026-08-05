@@ -84,14 +84,22 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent 40%, var(--backdrop) 86%);
+      background: linear-gradient(90deg, transparent 52%, rgba(3, 14, 15, 0.75) 94%);
       pointer-events: none;
     }
     .hero-text {
       position: relative;
+      isolation: isolate;
       max-width: 30rem;
       margin-left: auto;
       padding: 30vh 0;
+    }
+    .hero-text::before {
+      content: "";
+      position: absolute;
+      inset: 22vh -3rem 22vh -4rem;
+      z-index: -1;
+      background: radial-gradient(ellipse at center, rgba(3, 14, 15, 0.94) 45%, rgba(3, 14, 15, 0) 78%);
     }
     h1 { font-size: clamp(2.2rem, 3.4vw, 3.2rem); }
     .lede { max-width: 40ch; font-size: 1.05rem; }
@@ -134,7 +142,7 @@
 
 <footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
 
-<script src="assets/sigil.js?v=7"></script>
+<script src="assets/sigil.js?v=8"></script>
 <script>
   const canvas = document.getElementById("sigilCanvas");
   const seed = Math.floor(Math.random() * 100000);
@@ -149,7 +157,7 @@
       scatter: wide ? 5 : 2,
       edges: wide ? 7 : 4,
       labels: wide ? 9 : 5,
-      coreScale: wide ? 0.3 : 0.32,
+      coreScale: wide ? 0.26 : 0.28,
       cxFrac: wide ? 0.4 : 0.5,
     };
   }, { stage: document.getElementById("heroStage"), turns: 2 });
