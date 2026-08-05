@@ -103,15 +103,18 @@
     .hero-text::before {
       content: "";
       position: absolute;
-      inset: 22vh -3rem 22vh -4rem;
+      /* The box is deliberately far larger than the copy so the ellipse can
+         reach full transparency inside it — otherwise the box edge clips the
+         falloff and the scrim reads as a rectangle. */
+      inset: -6vh -14rem;
       z-index: -1;
-      background: radial-gradient(ellipse 120% 100% at 55% 50%,
+      background: radial-gradient(ellipse 62% 56% at 50% 50%,
         rgba(3, 14, 15, 0.95) 0%,
-        rgba(3, 14, 15, 0.92) 38%,
-        rgba(3, 14, 15, 0.78) 56%,
-        rgba(3, 14, 15, 0.45) 70%,
-        rgba(3, 14, 15, 0.16) 83%,
-        rgba(3, 14, 15, 0) 100%);
+        rgba(3, 14, 15, 0.9) 32%,
+        rgba(3, 14, 15, 0.62) 52%,
+        rgba(3, 14, 15, 0.3) 68%,
+        rgba(3, 14, 15, 0.1) 82%,
+        rgba(3, 14, 15, 0) 94%);
     }
     h1 { font-size: clamp(2.2rem, 3.4vw, 3.2rem); }
     .lede { max-width: 40ch; font-size: 1.05rem; }
@@ -154,7 +157,7 @@
 
 <footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
 
-<script src="assets/sigil.js?v=12"></script>
+<script src="assets/sigil.js?v=13"></script>
 <script>
   const canvas = document.getElementById("sigilCanvas");
   const seed = Math.floor(Math.random() * 100000);
