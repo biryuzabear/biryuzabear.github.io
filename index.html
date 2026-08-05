@@ -3,46 +3,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>biryuzabear</title>
+<title>Cindersmith — biryuzabear</title>
+<meta name="description" content="Personal site of biryuzabear — projects, links, and notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
 <style>
-  :root {
-    --bg: #0d3438;
-    --ink: #e0996a;
-    --dim: #7fa8ac;
+  .hero {
+    position: relative;
+    height: min(58vh, 420px);
+    margin: 0 calc(var(--gap) * -1) 0.5rem;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: ui-monospace, "SF Mono", "IBM Plex Mono", Menlo, monospace;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .hero canvas { width: 100%; height: 100%; display: block; }
+  .hero-caption {
     text-align: center;
+    margin-top: -1.5rem;
   }
-  main {
-    padding: 2rem;
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.9rem;
+    margin-top: 1rem;
   }
-  h1 {
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
-    letter-spacing: 0.04em;
-    margin: 0 0 0.75rem;
+  .grid a.plate {
+    text-decoration: none;
+    color: var(--ink);
+    display: block;
   }
-  p {
-    color: var(--dim);
-    margin: 0;
+  .grid a.plate .k {
+    font-family: var(--font-display);
+    color: var(--highlight);
     font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .grid a.plate .d {
+    font-size: 0.78rem;
+    opacity: 0.7;
   }
 </style>
 </head>
 <body>
+<nav class="site-nav">
+  <a class="mark" href="index.html">CINDERSMITH</a>
+  <ul>
+    <li><a href="index.html" aria-current="page">Home</a></li>
+    <li><a href="links.html">Links</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="blog/index.html">Blog</a></li>
+  </ul>
+</nav>
+
 <main>
-  <h1>under construction</h1>
-  <p>biryuzabear.github.io</p>
+  <div class="hero"><canvas id="sigilCanvas"></canvas></div>
+  <p class="hero-caption eyebrow">seed #<span id="seedLabel">—</span> · refresh to re-cast</p>
+
+  <p class="eyebrow">biryuzabear</p>
+  <h1>Etchings, circuits, and things worth keeping.</h1>
+  <p class="lede">A small foundry of tools, notes, and whatever else gets made along the way — rendered in brass, teal, and copper trace.</p>
+
+  <hr class="trace-rule">
+
+  <h2>Find your way</h2>
+  <div class="grid">
+    <a class="plate" href="links.html"><span class="k">Links</span><span class="d">where to find me elsewhere</span></a>
+    <a class="plate" href="about.html"><span class="k">About</span><span class="d">the short version</span></a>
+    <a class="plate" href="blog/index.html"><span class="k">Blog</span><span class="d">notes, builds, dispatches</span></a>
+  </div>
 </main>
+
+<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+
+<script src="assets/sigil.js"></script>
+<script>
+  const canvas = document.getElementById("sigilCanvas");
+  const seed = Math.floor(Math.random() * 100000);
+  document.getElementById("seedLabel").textContent = seed;
+  const styles = getComputedStyle(document.documentElement);
+  const ink = styles.getPropertyValue("--ink").trim();
+  function draw() { Cindersmith.renderSigilField(canvas, { seed, ink, satellites: 7 }); }
+  draw();
+  window.addEventListener("resize", draw);
+</script>
 </body>
 </html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Links — Cindersmith</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .ports {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 1.5rem;
+  }
+  .port {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    text-decoration: none;
+    color: var(--ink);
+    padding: 0.9rem 1rem;
+  }
+  .port .pin {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid var(--highlight);
+    background: var(--void);
+    flex: none;
+  }
+  .port:hover .pin, .port:focus-visible .pin { background: var(--highlight); }
+  .port .label {
+    font-family: var(--font-display);
+    color: var(--highlight);
+    font-size: 1rem;
+    flex: 1;
+  }
+  .port .handle {
+    font-size: 0.8rem;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a class="mark" href="index.html">CINDERSMITH</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="links.html" aria-current="page">Links</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="blog/index.html">Blog</a></li>
+  </ul>
+</nav>
+
+<main>
+  <p class="eyebrow">signal directory</p>
+  <h1>Links</h1>
+  <p class="lede">Every wire leads somewhere. Ports open as they're wired up.</p>
+
+  <div class="ports">
+    <a class="port plate" href="https://github.com/biryuzabear" target="_blank" rel="noopener">
+      <span class="pin"></span><span class="label">GitHub</span><span class="handle">@biryuzabear</span>
+    </a>
+    <a class="port plate" href="mailto:vladimir.fedorchenko@oviva.com">
+      <span class="pin"></span><span class="label">Email</span><span class="handle">write in</span>
+    </a>
+  </div>
+
+  <hr class="trace-rule">
+  <p class="lede" style="opacity:.55;font-size:.8rem">More ports get wired in as accounts get added — edit <code>links.html</code> directly.</p>
+</main>
+
+<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+</body>
+</html>

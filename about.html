@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About — Cindersmith</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .specimen {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    margin-top: 1.5rem;
+  }
+  .specimen canvas { width: 84px; height: 84px; flex: none; }
+  .specimen dl {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .specimen dt { color: var(--highlight); opacity: 0.8; }
+  .specimen dd { margin: 0 0 0.5rem; opacity: 0.85; }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a class="mark" href="index.html">CINDERSMITH</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="links.html">Links</a></li>
+    <li><a href="about.html" aria-current="page">About</a></li>
+    <li><a href="blog/index.html">Blog</a></li>
+  </ul>
+</nav>
+
+<main>
+  <p class="eyebrow">specimen card</p>
+  <h1>About</h1>
+
+  <div class="specimen plate">
+    <canvas id="markCanvas"></canvas>
+    <dl>
+      <dt>Handle</dt><dd>biryuzabear</dd>
+      <dt>Domain</dt><dd>tools, notes, small builds</dd>
+    </dl>
+  </div>
+
+  <hr class="trace-rule">
+  <p class="lede">This is the short version — fill in the rest whenever it's ready. Fonts, palette, and the sigil engine are shared with the <a href="index.html">home page</a> and the generator tools this site grew out of.</p>
+</main>
+
+<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+
+<script src="assets/sigil.js"></script>
+<script>
+  const canvas = document.getElementById("markCanvas");
+  canvas.width = 168; canvas.height = 168;
+  const ink = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim();
+  Cindersmith.renderSigilField(canvas, { seed: 42, ink, satellites: 0 });
+</script>
+</body>
+</html>
