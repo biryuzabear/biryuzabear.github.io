@@ -219,6 +219,56 @@ function drawSymbolAt(ctx, cx, cy, r, seed, color, lineWidth) {
   ctx.restore();
 }
 
+/* ---------- metallic sheen (ported from shadeHex/shineStops/paint) ---------- */
+function hexToRgb(hex) {
+  const v = hex.replace("#", "");
+  return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+}
+function shadeHex(hex, amt) {
+  const [r, g, b] = hexToRgb(hex);
+  const t = amt < 0 ? 0 : 255;
+  const p = Math.abs(amt);
+  const mix = (c) => Math.round(c + (t - c) * p);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+function metallicGradient(ctx, color, x0, y0, x1, y1, amt, bands) {
+  const warm = shadeHex(color, amt * 0.3);
+  const sheen = shadeHex(color, amt);
+  const ang = -0.65; // fixed light angle, radians
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  const r = Math.max(1, Math.hypot(x1 - x0, y1 - y0) / 2);
+  const g = ctx.createLinearGradient(cx - Math.cos(ang) * r, cy - Math.sin(ang) * r, cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
+  g.addColorStop(0, warm);
+  for (let b = 0; b < bands; b++) {
+    const c = (b + 0.5) / bands;
+    const w = 0.5 / bands;
+    g.addColorStop(Math.max(0.01, c - w * 0.75), color);
+    g.addColorStop(c, sheen);
+    g.addColorStop(Math.min(0.99, c + w * 0.75), color);
+  }
+  g.addColorStop(1, warm);
+  return g;
+}
+
+/* ---------- PCB-style elbow traces with square pads ---------- */
+function drawPad(ctx, x, y, s, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x - s / 2, y - s / 2, s, s);
+}
+function drawTrace(ctx, x0, y0, x1, y1, color, lw, bendFirst) {
+  const midX = bendFirst ? x1 : x0;
+  const midY = bendFirst ? y0 : y1;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "square";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(midX, midY);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+}
+
 function fitCanvas(canvas) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -252,37 +302,51 @@ function renderSigilField(canvas, opts) {
     sats.push({ x: sx, y: sy, r: sr, a });
   }
 
-  // trace stubs from the core ring out to each satellite, with a via dot at both ends
-  ctx.strokeStyle = ink;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = lw * 0.6;
-  for (const s of sats) {
-    const x0 = cx + Math.cos(s.a) * R, y0 = cy + Math.sin(s.a) * R;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(s.x, s.y);
-    ctx.stroke();
-    ctx.fillStyle = ink;
-    ctx.beginPath(); ctx.arc(x0, y0, lw * 0.55, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(s.x, s.y, lw * 0.55, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // satellite sigils, each with a small alchemical symbol inside
+  // PCB-style elbow traces from the core ring out to each satellite pad,
+  // right-angle bends instead of straight wires, with square via pads
+  const traceMetal = metallicGradient(ctx, ink, cx - R * 2, cy - R * 2, cx + R * 2, cy + R * 2, 0.5, 3);
   sats.forEach((s, i) => {
-    ctx.globalAlpha = 0.75;
-    drawAlchemyCircleAt(ctx, s.x, s.y, s.r, seed + i * 91 + 1, ink, lw * 0.75);
-    drawSymbolAt(ctx, s.x, s.y, s.r * 0.42, seed + i * 91 + 2, ink, lw * 0.7);
+    const x0 = cx + Math.cos(s.a) * R, y0 = cy + Math.sin(s.a) * R;
+    ctx.globalAlpha = 0.65;
+    drawTrace(ctx, x0, y0, s.x, s.y, traceMetal, lw * 0.55, i % 2 === 0);
+    ctx.globalAlpha = 0.9;
+    drawPad(ctx, x0, y0, lw * 1.3, ink);
+    drawPad(ctx, s.x, s.y, lw * 1.3, ink);
     ctx.globalAlpha = 1;
   });
 
-  // main circle, brighter and with a soft bloom, plus its own symbol at the core
+  // a couple of decorative dead-end stub traces for circuit-board density
+  const stubRng = mulberry32(seed + 55);
+  for (let i = 0; i < 4; i++) {
+    const a = stubRng() * Math.PI * 2;
+    const x0 = cx + Math.cos(a) * R * 1.02, y0 = cy + Math.sin(a) * R * 1.02;
+    const len = R * (0.14 + stubRng() * 0.16);
+    const horizFirst = stubRng() > 0.5;
+    const x1 = x0 + (horizFirst ? Math.cos(a) : 0) * len;
+    const y1 = y0 + (horizFirst ? 0 : Math.sin(a)) * len;
+    ctx.globalAlpha = 0.35;
+    drawTrace(ctx, x0, y0, x1, y1, ink, lw * 0.4, horizFirst);
+    drawPad(ctx, x1, y1, lw * 0.9, ink);
+    ctx.globalAlpha = 1;
+  }
+
+  // satellite sigils in brushed metal, each with a small alchemical symbol inside
+  sats.forEach((s, i) => {
+    const satMetal = metallicGradient(ctx, ink, s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r, 0.45, 2);
+    ctx.globalAlpha = 0.85;
+    drawAlchemyCircleAt(ctx, s.x, s.y, s.r, seed + i * 91 + 1, satMetal, lw * 0.75);
+    drawSymbolAt(ctx, s.x, s.y, s.r * 0.42, seed + i * 91 + 2, satMetal, lw * 0.7);
+    ctx.globalAlpha = 1;
+  });
+
+  // main circle in bright brushed metal with a soft bloom, symbol at the core
+  const coreMetal = metallicGradient(ctx, highlight, cx - R, cy - R, cx + R, cy + R, 0.6, 4);
   ctx.save();
   ctx.shadowColor = highlight;
-  ctx.shadowBlur = R * 0.06;
-  drawAlchemyCircleAt(ctx, cx, cy, R, seed, highlight, lw);
+  ctx.shadowBlur = R * 0.08;
+  drawAlchemyCircleAt(ctx, cx, cy, R, seed, coreMetal, lw);
   ctx.restore();
-  drawSymbolAt(ctx, cx, cy, R * 0.3, seed + 501, highlight, lw * 0.85);
+  drawSymbolAt(ctx, cx, cy, R * 0.3, seed + 501, coreMetal, lw * 0.85);
 }
 
 window.Cindersmith = { mulberry32, alchemyPrimitives, renderPrims, drawAlchemyCircleAt, renderSigilField };
