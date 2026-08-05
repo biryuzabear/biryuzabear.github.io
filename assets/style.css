@@ -17,6 +17,11 @@
   --gap: clamp(1.25rem, 4vw, 2.5rem);
 }
 
+@media (min-width: 900px) {
+  :root { --max-w: 1180px; }
+  body { font-size: 17px; }
+}
+
 * { box-sizing: border-box; }
 
 html {

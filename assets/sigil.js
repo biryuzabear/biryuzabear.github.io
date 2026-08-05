@@ -179,6 +179,46 @@ function drawAlchemyCircleAt(ctx, cx, cy, radius, seed, color, lineWidth) {
   ctx.restore();
 }
 
+/* ---------- alchemical symbols (subset, ported from SYMBOL_SHAPES) ---------- */
+const _L = (x1, y1, x2, y2) => ({ t: "line", a: [x1, y1, x2, y2] });
+const _C = (x, y, r) => ({ t: "circle", c: [x, y], r });
+const _D = (x, y, r) => ({ t: "dot", c: [x, y], r });
+const PI = Math.PI;
+const TRI_UP = [[0, -0.85], [0.8, 0.55], [-0.8, 0.55]];
+const TRI_DOWN = [[0, 0.85], [0.8, -0.55], [-0.8, -0.55]];
+
+const SYMBOL_SHAPES = [
+  () => [{ t: "poly", pts: TRI_UP }],
+  () => [{ t: "poly", pts: TRI_DOWN }],
+  () => [{ t: "poly", pts: TRI_UP }, _L(-0.42, 0.02, 0.42, 0.02)],
+  () => [_C(0, 0, 0.8), _D(0, 0, 0.15)],
+  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0)],
+  () => [_C(0, 0, 0.8), _L(-0.8, 0, 0.8, 0), _L(0, -0.8, 0, 0.8)],
+  () => [_C(-0.14, 0.2, 0.44), _L(0.17, -0.11, 0.72, -0.66), _L(0.72, -0.66, 0.36, -0.66), _L(0.72, -0.66, 0.72, -0.3)],
+  () => [_L(-0.18, -0.72, -0.18, 0.28), _L(-0.6, -0.36, 0.24, -0.36)],
+  () => [_C(0, 0, 0.8), _L(-0.56, -0.56, 0.56, 0.56), _L(-0.56, 0.56, 0.56, -0.56)],
+  () => [{ t: "poly", pts: [[0, -0.95], [0.5, 0.69], [-0.81, -0.26], [0.81, -0.26], [-0.5, 0.69]] }],
+];
+
+function scalePrims(prims, s) {
+  return prims.map((p) => {
+    const q = { t: p.t };
+    if (p.c) q.c = [p.c[0] * s, p.c[1] * s];
+    if (p.r !== undefined) q.r = p.r * s;
+    if (p.a) q.a = p.a.map((v) => v * s);
+    if (p.pts) q.pts = p.pts.map(([x, y]) => [x * s, y * s]);
+    return q;
+  });
+}
+
+function drawSymbolAt(ctx, cx, cy, r, seed, color, lineWidth) {
+  const shape = SYMBOL_SHAPES[Math.floor(mulberry32(seed)() * SYMBOL_SHAPES.length)];
+  ctx.save();
+  ctx.translate(cx, cy);
+  renderPrims(ctx, scalePrims(shape(), r), color, lineWidth);
+  ctx.restore();
+}
+
 function fitCanvas(canvas) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -193,26 +233,56 @@ function fitCanvas(canvas) {
 // each its own seed — mirrors how the generator scatters satellites around
 // the main sigil.
 function renderSigilField(canvas, opts) {
-  const { seed = 1, ink = "#c17a4a", satellites = 6 } = opts || {};
+  const { seed = 1, ink = "#c17a4a", highlight = "#e0996a", satellites = 6 } = opts || {};
   const { ctx, w, h } = fitCanvas(canvas);
   ctx.clearRect(0, 0, w, h);
   const cx = w / 2, cy = h / 2;
-  const R = Math.min(w, h) * 0.34;
-  const lw = Math.max(1, R * 0.02);
+  const R = Math.min(w, h) * 0.32;
+  const lw = Math.max(1.4, R * 0.026);
 
   const rng = mulberry32(seed + 777);
+  const sats = [];
   for (let i = 0; i < satellites; i++) {
-    const a = (i / satellites) * Math.PI * 2 + rng() * 0.35;
-    const orbit = R * (1.85 + rng() * 0.55);
+    const a = (i / satellites) * Math.PI * 2 + rng() * 0.3;
+    const orbit = R * (1.75 + rng() * 0.6);
     const sx = cx + Math.cos(a) * orbit;
     const sy = cy + Math.sin(a) * orbit;
-    if (sx < -20 || sx > w + 20 || sy < -20 || sy > h + 20) continue;
-    ctx.globalAlpha = 0.4 + rng() * 0.25;
-    drawAlchemyCircleAt(ctx, sx, sy, R * (0.16 + rng() * 0.1), seed + i * 91 + 1, ink, lw * 0.85);
-    ctx.globalAlpha = 1;
+    const sr = R * (0.15 + rng() * 0.11);
+    if (sx < -sr || sx > w + sr || sy < -sr || sy > h + sr) continue;
+    sats.push({ x: sx, y: sy, r: sr, a });
   }
 
-  drawAlchemyCircleAt(ctx, cx, cy, R, seed, ink, lw);
+  // trace stubs from the core ring out to each satellite, with a via dot at both ends
+  ctx.strokeStyle = ink;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = lw * 0.6;
+  for (const s of sats) {
+    const x0 = cx + Math.cos(s.a) * R, y0 = cy + Math.sin(s.a) * R;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(s.x, s.y);
+    ctx.stroke();
+    ctx.fillStyle = ink;
+    ctx.beginPath(); ctx.arc(x0, y0, lw * 0.55, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(s.x, s.y, lw * 0.55, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // satellite sigils, each with a small alchemical symbol inside
+  sats.forEach((s, i) => {
+    ctx.globalAlpha = 0.75;
+    drawAlchemyCircleAt(ctx, s.x, s.y, s.r, seed + i * 91 + 1, ink, lw * 0.75);
+    drawSymbolAt(ctx, s.x, s.y, s.r * 0.42, seed + i * 91 + 2, ink, lw * 0.7);
+    ctx.globalAlpha = 1;
+  });
+
+  // main circle, brighter and with a soft bloom, plus its own symbol at the core
+  ctx.save();
+  ctx.shadowColor = highlight;
+  ctx.shadowBlur = R * 0.06;
+  drawAlchemyCircleAt(ctx, cx, cy, R, seed, highlight, lw);
+  ctx.restore();
+  drawSymbolAt(ctx, cx, cy, R * 0.3, seed + 501, highlight, lw * 0.85);
 }
 
 window.Cindersmith = { mulberry32, alchemyPrimitives, renderPrims, drawAlchemyCircleAt, renderSigilField };
