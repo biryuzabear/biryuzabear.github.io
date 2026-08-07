@@ -75,7 +75,7 @@ a:hover, a:focus-visible { text-decoration-color: var(--highlight); }
 .site-nav {
   max-width: var(--max-w);
   margin: 0 auto;
-  padding: var(--gap) var(--gap) 0;
+  padding: var(--gap) var(--gap) 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
