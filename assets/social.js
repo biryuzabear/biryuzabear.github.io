@@ -1,6 +1,6 @@
-// Reads social.json and renders it either as compact icon buttons (the nav)
-// or as full port rows (the Links page). Hrefs are "#" until real accounts
-// are wired in — that's a content edit to social.json, not a markup change.
+// Reads social.json and renders it as compact icon buttons — used in the
+// nav on every page. Hrefs are "#" until real accounts are wired in —
+// that's a content edit to social.json, not a markup change.
 
 const SOCIAL_ICONS = {
   x: '<path d="M5 5 L19 19 M19 5 L5 19"/>',
@@ -18,17 +18,12 @@ async function fetchSocial(jsonUrl) {
   return res.json();
 }
 
-async function renderSocial(container, { jsonUrl, variant = "compact" } = {}) {
+async function renderSocial(container, { jsonUrl } = {}) {
   if (!container) return;
   const links = await fetchSocial(jsonUrl);
-  container.innerHTML = links.map((s) => variant === "port"
-    ? `<a class="port plate" href="${s.href}">
-        <span class="icon">${iconSvg(s.icon)}</span>
-        <span class="label metal">${s.name}</span>
-        <span class="handle">soon</span>
-      </a>`
-    : `<a class="icon-btn" href="${s.href}" aria-label="${s.name}">${iconSvg(s.icon)}</a>`
-  ).join("");
+  container.innerHTML = links
+    .map((s) => `<a class="icon-btn" href="${s.href}" aria-label="${s.name}">${iconSvg(s.icon)}</a>`)
+    .join("");
 }
 
 window.Cindersmith = window.Cindersmith || {};

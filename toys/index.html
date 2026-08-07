@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Blog — Cindersmith</title>
-<meta name="description" content="Notes, builds, and dispatches from biryuzabear.">
+<title>Toys — Cindersmith</title>
+<meta name="description" content="Standalone browser generators — self-contained, no build step, no server.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Blog — Cindersmith">
-<meta property="og:description" content="Notes, builds, and dispatches from biryuzabear.">
-<meta property="og:url" content="https://biryuzabear.github.io/blog/index.html">
+<meta property="og:title" content="Toys — Cindersmith">
+<meta property="og:description" content="Standalone browser generators — self-contained, no build step, no server.">
+<meta property="og:url" content="https://biryuzabear.github.io/toys/index.html">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Blog — Cindersmith">
-<meta name="twitter:description" content="Notes, builds, and dispatches from biryuzabear.">
+<meta name="twitter:title" content="Toys — Cindersmith">
+<meta name="twitter:description" content="Standalone browser generators — self-contained, no build step, no server.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -25,17 +25,21 @@
     <li><a href="../index.html">Home</a></li>
     <li><a href="../links.html">Links</a></li>
     <li><a href="../about.html">About</a></li>
-    <li><a href="index.html" aria-current="page">Blog</a></li>
-    <li><a href="../toys/index.html">Toys</a></li>
+    <li><a href="../blog/index.html">Blog</a></li>
+    <li><a href="index.html" aria-current="page">Toys</a></li>
   </ul>
   <div class="site-nav-social" id="navSocial"></div>
 </nav>
 
 <main>
-  <p class="eyebrow">dispatches</p>
-  <h1>Blog</h1>
+  <p class="eyebrow">standalone builds</p>
+  <h1>Toys</h1>
+  <p class="lede">Self-contained generators — one file each, no build step, no server. Open one straight in a browser.</p>
 
-  <div class="entries" id="entries"></div>
+  <div class="grid">
+    <a class="plate" href="gravure-card.html"><span class="k metal">Gravure title card</span><span class="d">seeded alchemy-circle plate for thumbnails and title cards</span></a>
+    <a class="plate" href="text-background.html"><span class="k metal">Text background</span><span class="d">paper-and-grain plate for a title, subtitle, and body text</span></a>
+  </div>
 </main>
 
 <footer class="site-foot">
@@ -43,16 +47,14 @@
     <a href="../index.html">Home</a>
     <a href="../links.html">Links</a>
     <a href="../about.html">About</a>
-    <a href="index.html" aria-current="page">Blog</a>
-    <a href="../toys/index.html">Toys</a>
+    <a href="../blog/index.html">Blog</a>
+    <a href="index.html" aria-current="page">Toys</a>
   </nav>
   <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
 </footer>
 
-<script src="../assets/posts.js?v=18"></script>
 <script src="../assets/social.js?v=18"></script>
 <script>
-  Cindersmith.renderEntries(document.getElementById("entries"), { jsonUrl: "../posts.json", hrefPrefix: "" });
   Cindersmith.renderSocial(document.getElementById("navSocial"), { jsonUrl: "../social.json" });
 </script>
 </body>

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 <style>
   /* The stage is taller than the viewport and the plate sticks inside it, so
      there is room to scroll the animation in place before the page moves on. */
@@ -42,27 +42,6 @@
     order: -1;
   }
   .hero canvas { width: 100%; height: 100%; display: block; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 0.9rem;
-    margin-top: 1rem;
-  }
-  .grid a.plate {
-    text-decoration: none;
-    color: var(--ink);
-    display: block;
-  }
-  .grid a.plate .k {
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    display: block;
-    margin-bottom: 0.25rem;
-  }
-  .grid a.plate .d {
-    font-size: 0.78rem;
-    opacity: 0.7;
-  }
 
   @media (min-width: 900px) {
     /* The plate spans the full viewport width and the text sits on top of it,
@@ -126,7 +105,6 @@
     }
     h1 { font-size: clamp(2.2rem, 3.4vw, 3.2rem); }
     .lede { max-width: 40ch; font-size: 1.05rem; }
-    .grid { grid-template-columns: repeat(3, 1fr); }
   }
 </style>
 </head>
@@ -138,6 +116,7 @@
     <li><a href="links.html">Links</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="blog/index.html">Blog</a></li>
+    <li><a href="toys/index.html">Toys</a></li>
   </ul>
   <div class="site-nav-social" id="navSocial"></div>
 </nav>
@@ -161,6 +140,7 @@
     <a class="plate" href="links.html"><span class="k metal">Links</span><span class="d">where to find me elsewhere</span></a>
     <a class="plate" href="about.html"><span class="k metal">About</span><span class="d">the short version</span></a>
     <a class="plate" href="blog/index.html"><span class="k metal">Blog</span><span class="d">notes, builds, dispatches</span></a>
+    <a class="plate" href="toys/index.html"><span class="k metal">Toys</span><span class="d">standalone generators</span></a>
   </div>
 
   <h2>Latest dispatches</h2>
@@ -176,12 +156,13 @@
     <a href="links.html">Links</a>
     <a href="about.html">About</a>
     <a href="blog/index.html">Blog</a>
+    <a href="toys/index.html">Toys</a>
   </nav>
   <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
 </footer>
 
-<script src="assets/posts.js?v=17"></script>
-<script src="assets/social.js?v=17"></script>
+<script src="assets/posts.js?v=18"></script>
+<script src="assets/social.js?v=18"></script>
 <script>
   Cindersmith.renderEntries(document.getElementById("latestPosts"), { jsonUrl: "posts.json", hrefPrefix: "blog/", limit: 3 });
   Cindersmith.renderSocial(document.getElementById("navSocial"), { jsonUrl: "social.json" });
