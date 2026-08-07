@@ -42,6 +42,7 @@
     <li><a href="about.html" aria-current="page">About</a></li>
     <li><a href="blog/index.html">Blog</a></li>
   </ul>
+  <div class="site-nav-social" id="navSocial"></div>
 </nav>
 
 <main>
@@ -70,6 +71,10 @@
   <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
 </footer>
 
+<script src="assets/social.js?v=17"></script>
+<script>
+  Cindersmith.renderSocial(document.getElementById("navSocial"), { jsonUrl: "social.json" });
+</script>
 <script src="assets/sigil.js?v=18"></script>
 <script>
   const canvas = document.getElementById("markCanvas");

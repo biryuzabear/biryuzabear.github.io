@@ -121,6 +121,36 @@ a:hover, a:focus-visible { text-decoration-color: var(--highlight); }
   background: linear-gradient(180deg, rgba(224,153,106,0.14), transparent 65%);
 }
 
+.site-nav-social {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.3rem;
+  padding-left: 0.8rem;
+  border-left: 1px solid var(--line);
+}
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink);
+  opacity: 0.75;
+  background: linear-gradient(180deg, rgba(193,122,74,0.06), transparent 65%);
+}
+.icon-btn svg { width: 1.1rem; height: 1.1rem; }
+.icon-btn:hover {
+  opacity: 1;
+  color: var(--highlight);
+  border-color: var(--highlight);
+  background: linear-gradient(180deg, rgba(224,153,106,0.14), transparent 65%);
+}
+@media (max-width: 480px) {
+  .site-nav-social { border-left: 0; padding-left: 0; margin-left: 0; }
+}
+
 /* ---- headings ---- */
 h1, h2, h3 {
   font-family: var(--font-display);

@@ -139,6 +139,7 @@
     <li><a href="about.html">About</a></li>
     <li><a href="blog/index.html">Blog</a></li>
   </ul>
+  <div class="site-nav-social" id="navSocial"></div>
 </nav>
 
 <main>
@@ -180,8 +181,10 @@
 </footer>
 
 <script src="assets/posts.js?v=17"></script>
+<script src="assets/social.js?v=17"></script>
 <script>
   Cindersmith.renderEntries(document.getElementById("latestPosts"), { jsonUrl: "posts.json", hrefPrefix: "blog/", limit: 3 });
+  Cindersmith.renderSocial(document.getElementById("navSocial"), { jsonUrl: "social.json" });
 </script>
 <script src="assets/sigil.js?v=18"></script>
 <script>
