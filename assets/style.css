@@ -281,15 +281,46 @@ h2 { font-size: clamp(1.15rem, 4vw, 1.5rem); margin: 2.5rem 0 0.75rem; }
   text-decoration: none;
 }
 
+/* ---- entries: post-listing card, shared by the blog index and the
+   homepage's latest-dispatches strip ---- */
+.entries { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1.5rem; }
+.entry { text-decoration: none; color: var(--ink); display: block; }
+.entry .date { font-size: 0.72rem; letter-spacing: 0.08em; opacity: 0.55; text-transform: uppercase; }
+.entry h3 { margin: 0.2rem 0 0.3rem; font-size: 1.05rem; }
+.entry .dek { font-size: 0.82rem; opacity: 0.7; }
+.empty { opacity: 0.55; font-size: 0.85rem; }
+
 footer.site-foot {
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 0 var(--gap) var(--gap);
+  text-align: center;
+}
+.foot-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+.foot-nav a {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink);
+  opacity: 0.7;
+}
+.foot-nav a:hover, .foot-nav a[aria-current="page"] {
+  opacity: 1;
+  color: var(--highlight);
+}
+.foot-line {
+  margin: 0;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   color: var(--ink);
   opacity: 0.45;
-  text-align: center;
 }
 
 @media (max-width: 480px) {

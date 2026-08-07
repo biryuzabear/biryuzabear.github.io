@@ -5,10 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>First etching — Cindersmith</title>
 <meta name="description" content="How the sigil plate on the home page is drawn, and what this blog is for.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="First etching — Cindersmith">
+<meta property="og:description" content="How the sigil plate on the home page is drawn, and what this blog is for.">
+<meta property="og:url" content="https://biryuzabear.github.io/blog/2026-08-07-first-etching.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="First etching — Cindersmith">
+<meta name="twitter:description" content="How the sigil plate on the home page is drawn, and what this blog is for.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/style.css?v=16">
+<link rel="stylesheet" href="../assets/style.css?v=17">
 </head>
 <body>
 <nav class="site-nav">
@@ -63,11 +71,27 @@
     <li>sigil engine</li>
   </ul>
 
-  <div class="post-foot">
+  <div class="post-foot" id="postNav">
     <a href="index.html">&larr; All entries</a>
   </div>
 </main>
 
-<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+<footer class="site-foot">
+  <nav class="foot-nav" aria-label="Footer">
+    <a href="../index.html">Home</a>
+    <a href="../links.html">Links</a>
+    <a href="../about.html">About</a>
+    <a href="index.html" aria-current="page">Blog</a>
+  </nav>
+  <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
+</footer>
+
+<script src="../assets/posts.js?v=17"></script>
+<script>
+  Cindersmith.renderPostNav(document.getElementById("postNav"), {
+    jsonUrl: "../posts.json",
+    slug: "2026-08-07-first-etching",
+  });
+</script>
 </body>
 </html>

@@ -4,10 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>About — Cindersmith</title>
+<meta name="description" content="The short version of who biryuzabear is and what Cindersmith is for.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="About — Cindersmith">
+<meta property="og:description" content="The short version of who biryuzabear is and what Cindersmith is for.">
+<meta property="og:url" content="https://biryuzabear.github.io/about.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="About — Cindersmith">
+<meta name="twitter:description" content="The short version of who biryuzabear is and what Cindersmith is for.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=16">
+<link rel="stylesheet" href="assets/style.css?v=17">
 <style>
   .specimen {
     display: flex;
@@ -51,9 +60,17 @@
   <p class="lede">This is the short version — fill in the rest whenever it's ready. Fonts, palette, and the sigil engine are shared with the <a href="index.html">home page</a> and the generator tools this site grew out of.</p>
 </main>
 
-<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+<footer class="site-foot">
+  <nav class="foot-nav" aria-label="Footer">
+    <a href="index.html">Home</a>
+    <a href="links.html">Links</a>
+    <a href="about.html" aria-current="page">About</a>
+    <a href="blog/index.html">Blog</a>
+  </nav>
+  <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
+</footer>
 
-<script src="assets/sigil.js?v=16"></script>
+<script src="assets/sigil.js?v=17"></script>
 <script>
   const canvas = document.getElementById("markCanvas");
   canvas.width = 168; canvas.height = 168;

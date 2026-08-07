@@ -4,18 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blog — Cindersmith</title>
+<meta name="description" content="Notes, builds, and dispatches from biryuzabear.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog — Cindersmith">
+<meta property="og:description" content="Notes, builds, and dispatches from biryuzabear.">
+<meta property="og:url" content="https://biryuzabear.github.io/blog/index.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Blog — Cindersmith">
+<meta name="twitter:description" content="Notes, builds, and dispatches from biryuzabear.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/style.css?v=16">
-<style>
-  .entries { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1.5rem; }
-  .entry { text-decoration: none; color: var(--ink); display: block; }
-  .entry .date { font-size: 0.72rem; letter-spacing: 0.08em; opacity: 0.55; text-transform: uppercase; }
-  .entry h3 { margin: 0.2rem 0 0.3rem; font-size: 1.05rem; }
-  .entry .dek { font-size: 0.82rem; opacity: 0.7; }
-  .empty { opacity: 0.55; font-size: 0.85rem; }
-</style>
+<link rel="stylesheet" href="../assets/style.css?v=17">
 </head>
 <body>
 <nav class="site-nav">
@@ -32,15 +33,22 @@
   <p class="eyebrow">dispatches</p>
   <h1>Blog</h1>
 
-  <div class="entries">
-    <a class="entry plate" href="2026-08-07-first-etching.html">
-      <span class="date"><time datetime="2026-08-07">7 August 2026</time></span>
-      <h3>First etching</h3>
-      <span class="dek">What this blog is for, and how the plate on the home page actually gets drawn.</span>
-    </a>
-  </div>
+  <div class="entries" id="entries"></div>
 </main>
 
-<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+<footer class="site-foot">
+  <nav class="foot-nav" aria-label="Footer">
+    <a href="../index.html">Home</a>
+    <a href="../links.html">Links</a>
+    <a href="../about.html">About</a>
+    <a href="index.html" aria-current="page">Blog</a>
+  </nav>
+  <p class="foot-line">cast in brass &amp; teal · biryuzabear.github.io</p>
+</footer>
+
+<script src="../assets/posts.js?v=17"></script>
+<script>
+  Cindersmith.renderEntries(document.getElementById("entries"), { jsonUrl: "../posts.json", hrefPrefix: "" });
+</script>
 </body>
 </html>
