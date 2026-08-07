@@ -7,12 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/style.css?v=13">
+<link rel="stylesheet" href="../assets/style.css?v=14">
 <style>
   .entries { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1.5rem; }
   .entry { text-decoration: none; color: var(--ink); display: block; }
   .entry .date { font-size: 0.72rem; letter-spacing: 0.08em; opacity: 0.55; text-transform: uppercase; }
   .entry h3 { margin: 0.2rem 0 0.3rem; font-size: 1.05rem; }
+  .entry .dek { font-size: 0.82rem; opacity: 0.7; }
   .empty { opacity: 0.55; font-size: 0.85rem; }
 </style>
 </head>
@@ -32,7 +33,11 @@
   <h1>Blog</h1>
 
   <div class="entries">
-    <p class="empty plate">Nothing etched yet — first post lands here. Each entry becomes its own file in <code>blog/</code>, linked from this index.</p>
+    <a class="entry plate" href="2026-08-07-first-etching.html">
+      <span class="date"><time datetime="2026-08-07">7 August 2026</time></span>
+      <h3>First etching</h3>
+      <span class="dek">What this blog is for, and how the plate on the home page actually gets drawn.</span>
+    </a>
   </div>
 </main>
 

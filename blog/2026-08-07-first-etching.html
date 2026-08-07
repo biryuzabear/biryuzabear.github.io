@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First etching — Cindersmith</title>
+<meta name="description" content="How the sigil plate on the home page is drawn, and what this blog is for.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css?v=14">
+</head>
+<body>
+<nav class="site-nav">
+  <a class="mark" href="../index.html">CINDERSMITH</a>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../links.html">Links</a></li>
+    <li><a href="../about.html">About</a></li>
+    <li><a href="index.html" aria-current="page">Blog</a></li>
+  </ul>
+</nav>
+
+<main>
+  <p class="post-meta"><time datetime="2026-08-07">7 August 2026</time></p>
+  <h1>First etching</h1>
+  <p class="post-dek">What this blog is for, and how the plate on the home page actually gets drawn.</p>
+
+  <hr class="trace-rule">
+
+  <article class="post">
+    <p>This is the example entry — it exists so every element a post might need has somewhere to be seen before it goes into a real one. Copy <code>_template.html</code> rather than this file when writing; this one is here to be looked at.</p>
+
+    <h2>What lands here</h2>
+    <p>Short write-ups of things that get built: generator tools, notes that outgrew a text file, and the occasional post-mortem on something that turned out harder than it looked.</p>
+    <ul>
+      <li>Builds, with enough detail to rebuild them</li>
+      <li>Notes worth keeping past the week they were useful</li>
+      <li>Whatever the sigil engine grows into next</li>
+    </ul>
+
+    <h2>How the plate is drawn</h2>
+    <p>The field on the home page is a seeded vector scene, not an image. A <strong>PRNG</strong> picks the shapes, the routing pass lays copper between them, and the whole thing is planned once and then repainted per frame as you move the pointer.</p>
+
+    <pre><code>Cindersmith.createSigilField(canvas, (w) =&gt; ({
+  seed, ink, highlight,
+  satellites: w &gt;= 900 ? 7 : 6,
+  coreScale: 0.26,
+}), { stage: heroStage, turns: () =&gt; 2 });</code></pre>
+
+    <p>Planning is the expensive half — corridor checks reject any trace that would cross the core, a ring, or another net — so it runs on resize only. Everything else is a repaint on the next animation frame.</p>
+
+    <blockquote>
+      <p>The scene is planned once and repainted cheaply, so pointer and scroll can move the layers at frame rate.</p>
+    </blockquote>
+
+    <h3>Still to do</h3>
+    <p>The detail well in the middle holds a placeholder gear. It wants a real object — something that changes with the seed like the rest of the plate does.</p>
+  </article>
+
+  <ul class="tags">
+    <li>meta</li>
+    <li>sigil engine</li>
+  </ul>
+
+  <div class="post-foot">
+    <a href="index.html">&larr; All entries</a>
+  </div>
+</main>
+
+<footer class="site-foot">cast in brass &amp; teal · biryuzabear.github.io</footer>
+</body>
+</html>

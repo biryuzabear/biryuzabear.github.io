@@ -148,6 +148,95 @@ h2 { font-size: clamp(1.15rem, 4vw, 1.5rem); margin: 2.5rem 0 0.75rem; }
   pointer-events: none;
 }
 
+/* ---- post: shared by every entry in blog/ ---- */
+.post-meta {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin: 0 0 0.6rem;
+}
+.post-dek {
+  font-size: 1.02rem;
+  opacity: 0.8;
+  max-width: 52ch;
+  margin: 0.6rem 0 0;
+}
+
+.post {
+  max-width: 68ch;
+  margin-top: 2rem;
+}
+.post p, .post ul, .post ol { margin: 0 0 1.1rem; opacity: 0.9; }
+.post h2 { font-size: clamp(1.1rem, 3vw, 1.35rem); margin: 2.2rem 0 0.7rem; }
+.post h3 { font-size: 1rem; margin: 1.8rem 0 0.5rem; }
+.post ul, .post ol { padding-left: 1.2rem; }
+.post li { margin-bottom: 0.35rem; }
+.post strong { color: var(--highlight); font-weight: 500; }
+
+.post blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--line);
+  opacity: 0.75;
+}
+.post blockquote p:last-child { margin-bottom: 0; }
+
+.post code {
+  font-size: 0.85em;
+  color: var(--highlight);
+  background: rgba(193, 122, 74, 0.08);
+  padding: 0.1em 0.36em;
+  border-radius: 2px;
+}
+.post pre {
+  margin: 1.4rem 0;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: rgba(6, 26, 28, 0.55);
+}
+.post pre code { background: none; padding: 0; color: var(--ink); }
+
+.post figure { margin: 1.6rem 0; }
+.post img { max-width: 100%; height: auto; display: block; border-radius: 3px; }
+.post figcaption { font-size: 0.75rem; opacity: 0.5; margin-top: 0.5rem; }
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+}
+.tags li {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.18rem 0.55rem;
+  opacity: 0.65;
+}
+
+.post-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2.5rem;
+}
+.post-foot a {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
 footer.site-foot {
   max-width: var(--max-w);
   margin: 0 auto;
