@@ -797,7 +797,7 @@ function createSigilField(canvas, opts, motionOpts) {
     frame = 0;
     px += (tpx - px) * 0.08;
     py += (tpy - py) * 0.08;
-    spin += (tspin - spin) * 0.16;
+    spin += (tspin - spin) * 0.045;
     paint(false);
     if (Math.abs(tpx - px) + Math.abs(tpy - py) + Math.abs(tspin - spin) > 0.0015) request();
     else settle();
