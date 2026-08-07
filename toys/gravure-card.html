@@ -160,6 +160,10 @@ h1 {
 .row { display: flex; gap: 0.5rem; }
 .row > * { flex: 1; min-width: 0; }
 
+.pxrow { display: flex; gap: 0.5rem; align-items: center; }
+.pxrow input[type="range"] { flex: 1; min-width: 0; }
+.pxrow input[type="number"] { flex: 0 0 5.2rem; }
+
 .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(52px, 1fr)); gap: 0.4rem; }
 .swatch { display: flex; flex-direction: column; gap: 0.2rem; }
 .swatch span {
@@ -206,6 +210,19 @@ input[type="file"] { font-size: 0.7rem !important; color: var(--parchment-dim); 
   width: auto;
   height: auto;
   filter: drop-shadow(0 12px 30px rgba(0,0,0,0.5));
+}
+
+/* Guides live on their own canvas so nothing about them can leak into the
+   exported PNG, which is the #card bitmap verbatim. */
+.canvas-wrap { position: relative; display: flex; justify-content: center; }
+.canvas-wrap #guides {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  max-height: none;
+  filter: none;
+  pointer-events: none;
 }
 
 .dims {
@@ -298,6 +315,26 @@ footer.note a { color: var(--copper-bright); }
             <input id="ch" type="number" value="1350" min="200" max="4000" step="10" data-format>
           </div>
         </div>
+        <label class="field check"><input id="showSafe" type="checkbox" checked> Crop guides (preview only)</label>
+        <div class="field">
+          <label for="safeRatio">Crop shown in feed</label>
+          <select id="safeRatio">
+            <option value="0.75" selected>3:4 — Reel cover in the profile grid</option>
+            <option value="1">1:1 — square grid</option>
+            <option value="0.8">4:5 — feed post</option>
+            <option value="1.7778">16:9</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="safeShift">Crop offset from centre (px)</label>
+          <div class="pxrow">
+            <input id="safeShiftRange" type="range" min="-400" max="400" step="1" value="0">
+            <input id="safeShift" type="number" min="-2000" max="2000" step="1" value="0">
+          </div>
+        </div>
+        <p class="hint">The dimmed bands are cut off in the grid. Numbers on the
+        guides are the clearance from the crop edge to the title and subtitle —
+        negative means the text is inside the cut.</p>
       </section>
 
       <section class="panel">
@@ -393,10 +430,15 @@ Assembly</textarea>
           <input id="titleTrack" type="range" min="0" max="0.4" step="0.005" value="0.09">
         </div>
         <div class="field">
-          <label for="titleY">Vertical position <span class="rangeval" id="titleYval"></span></label>
-          <input id="titleY" type="range" min="0.01" max="0.6" step="0.005" value="0.055">
+          <label for="titleGap">Margin from top edge (px)</label>
+          <div class="pxrow">
+            <input id="titleGapRange" type="range" min="0" max="900" step="1" value="46">
+            <input id="titleGap" type="number" min="-500" max="4000" step="1" value="46">
+          </div>
         </div>
         <label class="field check"><input id="titlePlate" type="checkbox" checked> Plate behind text</label>
+        <p class="hint">Measured to the top of the block itself — the plate edge
+        when the plate is on, the first line's cap height when it is off.</p>
       </section>
 
       <section class="panel">
@@ -414,10 +456,15 @@ Assembly</textarea>
           <input id="subTrack" type="range" min="0" max="0.4" step="0.005" value="0.075">
         </div>
         <div class="field">
-          <label for="subY">Vertical position <span class="rangeval" id="subYval"></span></label>
-          <input id="subY" type="range" min="0.4" max="0.98" step="0.005" value="0.885">
+          <label for="subGap">Margin from bottom edge (px)</label>
+          <div class="pxrow">
+            <input id="subGapRange" type="range" min="0" max="900" step="1" value="106">
+            <input id="subGap" type="number" min="-500" max="4000" step="1" value="106">
+          </div>
         </div>
         <label class="field check"><input id="subPlate" type="checkbox" checked> Plate behind text</label>
+        <p class="hint">Measured from the bottom of the block up, so the gap holds
+        when the subtitle grows to two lines.</p>
       </section>
 
       <section class="panel">
@@ -557,9 +604,15 @@ Assembly</textarea>
         <h2>Circuit</h2>
         <label class="field check"><input id="pcbTraces" type="checkbox"> PCB traces</label>
         <div class="field">
-          <label for="traceEdges">Edge bundles <span class="rangeval" id="traceEdgesval"></span></label>
+          <label for="traceEdges">Edge bundles — sides <span class="rangeval" id="traceEdgesval"></span></label>
           <input id="traceEdges" type="range" min="0" max="10" step="1" value="4">
         </div>
+        <div class="field">
+          <label for="traceEdgesV">Edge bundles — top / bottom <span class="rangeval" id="traceEdgesVval"></span></label>
+          <input id="traceEdgesV" type="range" min="0" max="10" step="1" value="4">
+        </div>
+        <p class="hint">Top and bottom bundles route into whatever is left beside
+        the title and subtitle blocks, so they only appear where there is room.</p>
         <div class="field">
           <label for="traceLinks">Satellite links <span class="rangeval" id="traceLinksval"></span></label>
           <input id="traceLinks" type="range" min="0" max="12" step="1" value="6">
@@ -681,7 +734,10 @@ Assembly</textarea>
     </div>
 
     <div class="preview">
-      <canvas id="card" width="1080" height="1350"></canvas>
+      <div class="canvas-wrap">
+        <canvas id="card" width="1080" height="1350"></canvas>
+        <canvas id="guides" width="1080" height="1350"></canvas>
+      </div>
       <p class="dims" id="dims">1080 × 1350</p>
       <div class="field">
         <label for="filePrefix">File name prefix <span class="rangeval" id="filePreview"></span></label>
@@ -959,7 +1015,7 @@ function corridorClear(pts, halfW, env, corridors, exempt) {
   return true;
 }
 
-function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes) {
+function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes, edgeCountV) {
   const rng = mulberry32(seed * 13 + 4211);
   const nets = [], anchors = [], corridors = [];
   const spacing = viaR * 2.2;
@@ -969,6 +1025,51 @@ function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes) {
     nP.push({ t: "circle", c: [p[0], p[1]], r: viaR }, { t: "punchCircle", c: [p[0], p[1]], r: viaR * 0.45 });
     anchors.push([p[0], p[1]]);
   };
+
+  /* top / bottom bundles — the same idea turned 90°. The way in is a narrow
+     channel between a text plate and the card edge, so unlike the side bundles
+     these step across in small increments and try progressively thinner
+     bundles at each slot rather than giving the whole slot up on one miss.
+     They run first because a side bundle can always slide down to the next
+     free slot, while a vertical one has nowhere else to go. At count 0 the
+     loop draws no random numbers, so the older nets come out unchanged. */
+  let madeV = 0;
+  const xMin = 12 * env.u, xMax = env.w - 12 * env.u;
+  const xCursor = [xMin + viaR, xMin + viaR];
+  let safetyV = 0;
+  while (madeV < (edgeCountV || 0) && safetyV++ < 400) {
+    const side = safetyV % 2;
+    const top = side === 0;
+    const x = xCursor[side];
+    if (x > xMax - viaR) {
+      if (xCursor[1 - side] > xMax - viaR) break;
+      continue;
+    }
+    let stride = viaR * 2.2;
+    for (let lanes = maxLanes; lanes >= 1; lanes--) {
+      const halfW = ((lanes - 1) * spacing) / 2 + viaR * 1.5;
+      /* The far end has to clear the text band, otherwise a bundle that cannot
+         get past a full-width plate still "succeeds" as a stub in the margin. */
+      const near = top ? env.yMin + viaR * 3 : env.yMax - viaR * 3;
+      const far = top ? cy - env.ringOut - halfW : cy + env.ringOut + halfW;
+      if (top ? near > far : near < far) continue;
+      const ey = near + rng() * (far - near);
+      const ex = Math.min(xMax - viaR, Math.max(xMin + viaR, x + (rng() - 0.5) * 90 * env.u));
+      const path = pcbPath([x, top ? -viaR * 2 : env.h + viaR * 2], [ex, ey]);
+      if (!path.dirs.length) continue;
+      if (!corridorClear(path.pts, halfW, env, corridors, new Set())) continue;
+      const netP = [];
+      lanePrims(netP, path, lanes, spacing, false, true, viaR);
+      const pe = path.pts[path.pts.length - 1];
+      anchors.push([pe[0], pe[1]]);
+      nets.push({ kind: "edge", prims: netP });
+      commitCorridor(path.pts, halfW);
+      stride = halfW * 2 + env.gap + rng() * 24 * env.u;
+      madeV++;
+      break;
+    }
+    xCursor[side] = x + stride;
+  }
 
   /* edge bundles — slot-packed down each side */
   let made = 0;
@@ -1081,7 +1182,8 @@ function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes) {
       }
     }
   }
-    return { prims: nets.flatMap((n) => n.prims), nets, anchors };
+
+  return { prims: nets.flatMap((n) => n.prims), nets, anchors };
 }
 
 function planTraceLabels(anchors, count, seed, env, size) {
@@ -1111,11 +1213,23 @@ function planTraceLabels(anchors, count, seed, env, size) {
 }
 
 function textBands(L, u) {
-  const nT = $("title").value.split("\n").filter((l) => l.trim() !== "").length;
-  const nS = $("subtitle").value.split("\n").filter((l) => l.trim() !== "").length;
+  const nT = textLines("title").length;
+  const nS = textLines("subtitle").length;
   return [
-    nT ? [L.titleTop - 24 * u, L.titleTop + L.titleSize * 1.2 * nT + 24 * u] : [-1, -1],
-    nS ? [L.subTop - 24 * u, L.subTop + L.subSize * 1.2 * nS + 24 * u] : [-1, -1],
+    nT ? [L.titleBox[1] - 24 * u, L.titleBox[3] + 24 * u] : [-1, -1],
+    nS ? [L.subBox[1] - 24 * u, L.subBox[3] + 24 * u] : [-1, -1],
+  ];
+}
+
+/* The bands above are full-width, which is right for keeping satellites and
+   designators out of the text — but too greedy for traces, which are happy to
+   run past a narrow plate. Traces get the blocks' real boxes instead. */
+function textBoxRects(L, u) {
+  const pad = 9 * u;
+  const grow = (b) => [b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad];
+  return [
+    ...(textLines("title").length ? [grow(L.titleBox)] : []),
+    ...(textLines("subtitle").length ? [grow(L.subBox)] : []),
   ];
 }
 
@@ -1569,6 +1683,21 @@ function drawTextBlock(ctx, lines, o) {
   return blockH;
 }
 
+/* Same arithmetic drawTextBlock does, without drawing — the layout needs the
+   block's real size before it can anchor it to an edge in pixels. */
+function blockMetrics(lines, o) {
+  const mctx = canvas.getContext("2d");
+  mctx.save();
+  mctx.font = o.font;
+  const maxW = Math.max(0, ...lines.map((l) => measureSpaced(mctx, l, o.spacing)));
+  const cap = capOffset(mctx, lines);
+  mctx.restore();
+  const lineH = lines.length > 1 ? o.size * 1.2 : cap.asc + cap.desc;
+  const padX = o.plate ? o.size * 0.72 : 0;
+  const padY = o.plate ? o.size * 0.36 : 0;
+  return { maxW, padX, padY, blockH: lineH * lines.length, outerW: maxW + padX * 2 };
+}
+
 /* ---------- ring text ----------
    Tokenised so a "·" separator can be drawn as a symbol rather than typeset,
    keeping it in the same linework as the rest of the engraving. */
@@ -1860,6 +1989,8 @@ function drawPlaceholderGear(ctx, cx, cy, r, color) {
 /* ---------- state ---------- */
 const canvas = $("card");
 const ctx = canvas.getContext("2d");
+const guideCanvas = $("guides");
+const gctx = guideCanvas.getContext("2d");
 let photoImg = null;
 let processedPhotoCanvas = null;
 
@@ -1874,7 +2005,90 @@ function applyFormat() {
   const h = Math.max(200, Math.round(val("ch") || 0));
   canvas.width = w;
   canvas.height = h;
+  guideCanvas.width = w;
+  guideCanvas.height = h;
+  $("titleGapRange").max = Math.round(h * 0.6);
+  $("subGapRange").max = Math.round(h * 0.6);
+  $("safeShiftRange").min = -Math.round(h / 2);
+  $("safeShiftRange").max = Math.round(h / 2);
   $("dims").textContent = `${w} × ${h}`;
+}
+
+/* ---------- crop guides ----------
+   Drawn on the overlay canvas, never on #card: a reel cover is uploaded at
+   9:16 but shown in the profile grid at 3:4, so the only thing that matters
+   while positioning text is how far it sits from the line the grid cuts on. */
+function drawGuides(L, W, H) {
+  gctx.setTransform(1, 0, 0, 1, 0, 0);
+  gctx.clearRect(0, 0, W, H);
+  if (!on("showSafe")) return;
+
+  const u = L.u;
+  const ratio = parseFloat($("safeRatio").value) || 0.75;
+  const cropH = Math.min(H, W / ratio);
+  const top = Math.max(0, Math.min(H - cropH, (H - cropH) / 2 + val("safeShift")));
+  const bottom = top + cropH;
+  const line = "#8ef0ff";
+  const mark = "#ffc46b";
+  const bad = "#ff7a7a";
+  const size = 15 * u;
+
+  gctx.fillStyle = "rgba(0,0,0,0.5)";
+  gctx.fillRect(0, 0, W, top);
+  gctx.fillRect(0, bottom, W, H - bottom);
+
+  gctx.lineWidth = 2 * u;
+  gctx.strokeStyle = line;
+  gctx.setLineDash([14 * u, 9 * u]);
+  for (const y of [top, bottom]) {
+    if (y <= 0 || y >= H) continue;
+    gctx.beginPath();
+    gctx.moveTo(0, y);
+    gctx.lineTo(W, y);
+    gctx.stroke();
+  }
+  gctx.setLineDash([]);
+
+  gctx.font = `600 ${size}px "IBM Plex Mono", monospace`;
+  const tag = (text, x, y, align, color) => {
+    gctx.textAlign = align;
+    gctx.textBaseline = "middle";
+    const w = gctx.measureText(text).width;
+    const x0 = align === "right" ? x - w : x;
+    gctx.fillStyle = "rgba(0,0,0,0.72)";
+    gctx.fillRect(x0 - 6 * u, y - size * 0.85, w + 12 * u, size * 1.7);
+    gctx.fillStyle = color;
+    gctx.fillText(text, x, y);
+  };
+
+  /* Keep the captions in the dimmed bands where they cover nothing that
+     survives the crop, unless the band is too thin to hold them. */
+  const label = $("safeRatio").selectedOptions[0].textContent.split("—")[0].trim();
+  const off = size * 1.4;
+  tag(`${label} crop · ${Math.round(top)} px cut from top`,
+    24 * u, top > off * 2 ? top - off : top + off, "left", line);
+  tag(`${Math.round(H - bottom)} px cut from bottom`,
+    24 * u, H - bottom > off * 2 ? bottom + off : bottom - off, "left", line);
+
+  /* Clearance between each crop line and the block nearest to it. */
+  const span = (yEdge, yBlock, text) => {
+    const gap = Math.abs(yBlock - yEdge);
+    const color = (yBlock - yEdge) * (yEdge === top ? 1 : -1) < 0 ? bad : mark;
+    gctx.strokeStyle = color;
+    gctx.lineWidth = 1.5 * u;
+    gctx.beginPath();
+    gctx.moveTo(0, yBlock);
+    gctx.lineTo(W, yBlock);
+    gctx.stroke();
+    const x = W - 26 * u;
+    gctx.beginPath();
+    gctx.moveTo(x, yEdge);
+    gctx.lineTo(x, yBlock);
+    gctx.stroke();
+    tag(`${text} ${Math.round(gap)} px`, x - 10 * u, (yEdge + yBlock) / 2, "right", color);
+  };
+  if (textLines("title").length) span(top, L.titleBox[1], "title");
+  if (textLines("subtitle").length) span(bottom, L.subBox[3], "subtitle");
 }
 
 function processPhoto() {
@@ -1900,13 +2114,37 @@ function processPhoto() {
 }
 
 /* ---------- shared layout arithmetic (canvas + SVG both consume this) ---------- */
+const textLines = (id) => $(id).value.split("\n").filter((l) => l.trim() !== "").map((l) => l.toUpperCase());
+
 function layoutNumbers(W, H) {
   const u = Math.min(W, H) / 640;
   const seed = parseInt($("seed").value, 10) || 0;
   const circleR = Math.min(W, H) * val("circleScale");
   const titleSize = 46 * u * val("titleScale");
   const subSize = 27 * u * val("subScale");
+  const titleSpacing = titleSize * val("titleTrack");
+  const subSpacing = subSize * val("subTrack");
+
+  /* Both blocks are anchored to an edge in pixels rather than to a fraction of
+     the height: the crop that eats a title card eats a fixed number of pixels,
+     not a fraction. Measuring first is what lets the anchor be the block's own
+     edge — top of the title, bottom of the subtitle — instead of its centre. */
+  const titleM = blockMetrics(textLines("title"), {
+    size: titleSize, spacing: titleSpacing, plate: on("titlePlate"),
+    font: `700 ${titleSize}px "${FONT_MAIN()}", serif`,
+  });
+  const subM = blockMetrics(textLines("subtitle"), {
+    size: subSize, spacing: subSpacing, plate: on("subPlate"),
+    font: `700 ${subSize}px "${FONT_MAIN()}", serif`,
+  });
+  const titleTop = val("titleGap") + titleM.padY;
+  const subTop = H - val("subGap") - subM.padY - subM.blockH;
+  const box = (m, top) => [W / 2 - m.outerW / 2, top - m.padY, W / 2 + m.outerW / 2, top + m.blockH + m.padY];
+
   return {
+    titleM, subM,
+    titleBox: box(titleM, titleTop),
+    subBox: box(subM, subTop),
     u, seed,
     cardBg: PAPER(),
     voidColor: VOID(),
@@ -1919,11 +2157,11 @@ function layoutNumbers(W, H) {
     ringRadius: circleR * val("ringOffset"),
     ringSize: circleR * 0.048 * val("ringScale"),
     titleSize,
-    titleTop: H * val("titleY"),
-    titleSpacing: titleSize * val("titleTrack"),
+    titleTop,
+    titleSpacing,
     subSize,
-    subTop: H * val("subY"),
-    subSpacing: subSize * val("subTrack"),
+    subTop,
+    subSpacing,
     marginSize: 13 * u * val("marginScale"),
   };
 }
@@ -1994,14 +2232,13 @@ function renderCard() {
   const titleSize = L.titleSize;
   const titleLines = $("title").value.split("\n").filter((l) => l.trim() !== "");
   const titleTop = L.titleTop;
-  const titleBlockH = titleSize * 1.2 * titleLines.length;
   const subTop = L.subTop;
   const subHasText = $("subtitle").value.trim() !== "";
   const satellites = planSatellites(
     seed + (parseInt($("satSeed").value, 10) || 0), parseInt($("satCount").value, 10) || 0,
     W, H,
-    titleLines.length ? titleTop + titleBlockH + 20 * u : -Infinity,
-    subHasText ? subTop - 20 * u : Infinity,
+    titleLines.length ? L.titleBox[3] + 20 * u : -Infinity,
+    subHasText ? L.subBox[1] - 20 * u : Infinity,
     circleCx, circleCy, circleR + val("satGap") * u,
     val("satScale"), val("satVar"), val("satAngle"), val("satJitter"), u
   );
@@ -2019,6 +2256,7 @@ function renderCard() {
     yMin: tb[0][1] + 10 * u,
     yMax: tb[1][0] - 10 * u,
     rects: [
+      ...textBoxRects(L, u),
       ...($("dwg").value.trim() ? [[W - 40 * u - L.marginSize * 1.3, H * val("marginYR") - H * 0.15, W - 40 * u + L.marginSize * 1.3, H * val("marginYR") + H * 0.15]] : []),
       ...($("drawnby").value.trim() ? [[40 * u - L.marginSize * 1.3, H * val("marginYL") - H * 0.15, 40 * u + L.marginSize * 1.3, H * val("marginYL") + H * 0.15]] : []),
     ],
@@ -2032,7 +2270,7 @@ function renderCard() {
   };
   let traceData = null;
   if (on("pcbTraces")) {
-    traceData = tracePrims(seed, satellites, circleR, val("viaSize") * 5 * u, pcbEnv, Math.round(val("traceEdges")), Math.round(val("traceLinks")), Math.round(val("traceLanes")));
+    traceData = tracePrims(seed, satellites, circleR, val("viaSize") * 5 * u, pcbEnv, Math.round(val("traceEdges")), Math.round(val("traceLinks")), Math.round(val("traceLanes")), Math.round(val("traceEdgesV")));
     ctx.save();
     ctx.globalAlpha = val("traceAlpha");
     renderPrims(ctx, traceData.prims, INK(), Math.max(1, L.circleWidth * 0.85));
@@ -2215,6 +2453,7 @@ function renderCard() {
   // stock the texture is in the surface, not just the ink's backdrop.
   drawGrain(ctx, W, H, seed, val("grainAmt"), u);
 
+  drawGuides(L, W, H);
   syncFilePreview();
 }
 
@@ -2370,18 +2609,14 @@ function buildSVG() {
 
   /* satellites — each its own group so they can be animated independently */
   const mctx = canvas.getContext("2d");
-  mctx.save();
-  mctx.font = `700 ${L.titleSize}px "${titleFam}"`;
   const titleLines = $("title").value.split("\n").filter((l) => l.trim() !== "");
-  const titleBlockH = L.titleSize * 1.2 * titleLines.length;
-  mctx.restore();
   const subHasText = $("subtitle").value.trim() !== "";
 
   const sats = planSatellites(
     seed + (parseInt($("satSeed").value, 10) || 0), parseInt($("satCount").value, 10) || 0,
     W, H,
-    titleLines.length ? L.titleTop + titleBlockH + 20 * u : -Infinity,
-    subHasText ? L.subTop - 20 * u : Infinity,
+    titleLines.length ? L.titleBox[3] + 20 * u : -Infinity,
+    subHasText ? L.subBox[1] - 20 * u : Infinity,
     L.circleCx, L.circleCy, L.circleR + val("satGap") * u,
     val("satScale"), val("satVar"), val("satAngle"), val("satJitter"), u
   );
@@ -2396,6 +2631,7 @@ function buildSVG() {
     yMin: svgTb[0][1] + 10 * u,
     yMax: svgTb[1][0] - 10 * u,
     rects: [
+      ...textBoxRects(L, u),
       ...($("dwg").value.trim() ? [[W - 40 * u - L.marginSize * 1.3, H * val("marginYR") - H * 0.15, W - 40 * u + L.marginSize * 1.3, H * val("marginYR") + H * 0.15]] : []),
       ...($("drawnby").value.trim() ? [[40 * u - L.marginSize * 1.3, H * val("marginYL") - H * 0.15, 40 * u + L.marginSize * 1.3, H * val("marginYL") + H * 0.15]] : []),
     ],
@@ -2408,7 +2644,7 @@ function buildSVG() {
     sats,
   };
   const svgTraceData = on("pcbTraces")
-    ? tracePrims(seed, sats, L.circleR, val("viaSize") * 5 * u, svgPcbEnv, Math.round(val("traceEdges")), Math.round(val("traceLinks")), Math.round(val("traceLanes")))
+    ? tracePrims(seed, sats, L.circleR, val("viaSize") * 5 * u, svgPcbEnv, Math.round(val("traceEdges")), Math.round(val("traceLinks")), Math.round(val("traceLanes")), Math.round(val("traceEdgesV")))
     : null;
   if (svgTraceData) {
     const lwT = Math.max(1, L.circleWidth * 0.85);
@@ -2570,9 +2806,15 @@ ${parts.join("\n")}
 }
 
 /* ---------- wiring ---------- */
+/* Slider to drag, number box to type an exact pixel value. The number box is
+   the one the layout reads, so typing past the slider's range still works. */
+const PX_PAIRS = ["titleGap", "subGap", "safeShift"];
+
 document.querySelectorAll("#controls input, #controls textarea, #controls select").forEach((el) => {
   if (el.type === "file") return;
   el.addEventListener("input", () => {
+    const pair = PX_PAIRS.find((id) => el.id === id || el.id === id + "Range");
+    if (pair) (el.id === pair ? $(pair + "Range") : $(pair)).value = el.value;
     if (el.hasAttribute("data-format")) {
       if (el.id === "cw" || el.id === "ch") $("preset").value = "custom";
       applyFormat();
@@ -2589,6 +2831,8 @@ document.querySelectorAll('#controls input[type="range"]').forEach((el) => {
   el.addEventListener("input", sync);
   sync();
 });
+
+const syncPxPairs = () => PX_PAIRS.forEach((id) => { $(id + "Range").value = $(id).value; });
 
 $("filePrefix").addEventListener("input", syncFilePreview);
 
@@ -2686,6 +2930,9 @@ const CONTENT_IDS = new Set([
   "title", "subtitle", "ring", "dwg", "drawnby", "seed",
   "preset", "cw", "ch", "photo", "filePrefix", "styleName",
   "titleScale", "titleTrack", "subScale",
+  // pixel margins belong to a format, and the guides are a preview aid
+  "titleGap", "titleGapRange", "subGap", "subGapRange",
+  "showSafe", "safeRatio", "safeShift", "safeShiftRange",
 ]);
 
 function styleInputs() {
@@ -2733,6 +2980,7 @@ function applyStyle(style) {
     const out = $(el.id + "val");
     if (out) out.textContent = parseFloat(el.value).toFixed(2);
   });
+  syncPxPairs();
   processPhoto();
   renderCard();
   return true;
