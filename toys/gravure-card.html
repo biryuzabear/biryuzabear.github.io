@@ -300,8 +300,8 @@ footer.note a { color: var(--copper-bright); }
         <div class="field">
           <label for="preset">Preset</label>
           <select id="preset" data-format>
-            <option value="1080x1920">Story / Shorts — 9:16</option>
-            <option value="1080x1350" selected>Instagram portrait — 4:5</option>
+            <option value="1080x1920" selected>Story / Shorts — 9:16</option>
+            <option value="1080x1350">Instagram portrait — 4:5</option>
             <option value="1080x1080">Instagram square — 1:1</option>
             <option value="1280x720">YouTube — 16:9</option>
             <option value="1000x1500">Pinterest — 2:3</option>
@@ -312,7 +312,7 @@ footer.note a { color: var(--copper-bright); }
           <label>Width / height (px)</label>
           <div class="row">
             <input id="cw" type="number" value="1080" min="200" max="4000" step="10" data-format>
-            <input id="ch" type="number" value="1350" min="200" max="4000" step="10" data-format>
+            <input id="ch" type="number" value="1920" min="200" max="4000" step="10" data-format>
           </div>
         </div>
         <label class="field check"><input id="showSafe" type="checkbox" checked> Crop guides (preview only)</label>
@@ -432,8 +432,8 @@ Assembly</textarea>
         <div class="field">
           <label for="titleGap">Margin from top edge (px)</label>
           <div class="pxrow">
-            <input id="titleGapRange" type="range" min="0" max="900" step="1" value="46">
-            <input id="titleGap" type="number" min="-500" max="4000" step="1" value="46">
+            <input id="titleGapRange" type="range" min="0" max="900" step="1" value="282">
+            <input id="titleGap" type="number" min="-500" max="4000" step="1" value="282">
           </div>
         </div>
         <label class="field check"><input id="titlePlate" type="checkbox" checked> Plate behind text</label>
@@ -458,8 +458,8 @@ Assembly</textarea>
         <div class="field">
           <label for="subGap">Margin from bottom edge (px)</label>
           <div class="pxrow">
-            <input id="subGapRange" type="range" min="0" max="900" step="1" value="106">
-            <input id="subGap" type="number" min="-500" max="4000" step="1" value="106">
+            <input id="subGapRange" type="range" min="0" max="900" step="1" value="311">
+            <input id="subGap" type="number" min="-500" max="4000" step="1" value="311">
           </div>
         </div>
         <label class="field check"><input id="subPlate" type="checkbox" checked> Plate behind text</label>
@@ -602,14 +602,14 @@ Assembly</textarea>
 
       <section class="panel">
         <h2>Circuit</h2>
-        <label class="field check"><input id="pcbTraces" type="checkbox"> PCB traces</label>
+        <label class="field check"><input id="pcbTraces" type="checkbox" checked> PCB traces</label>
         <div class="field">
           <label for="traceEdges">Edge bundles — sides <span class="rangeval" id="traceEdgesval"></span></label>
           <input id="traceEdges" type="range" min="0" max="10" step="1" value="4">
         </div>
         <div class="field">
           <label for="traceEdgesV">Edge bundles — top / bottom <span class="rangeval" id="traceEdgesVval"></span></label>
-          <input id="traceEdgesV" type="range" min="0" max="10" step="1" value="4">
+          <input id="traceEdgesV" type="range" min="0" max="10" step="1" value="9">
         </div>
         <p class="hint">The second slider fills the strips beyond the title and
         subtitle — short drops from the nearest card edge and long runs in from
@@ -736,10 +736,10 @@ Assembly</textarea>
 
     <div class="preview">
       <div class="canvas-wrap">
-        <canvas id="card" width="1080" height="1350"></canvas>
-        <canvas id="guides" width="1080" height="1350"></canvas>
+        <canvas id="card" width="1080" height="1920"></canvas>
+        <canvas id="guides" width="1080" height="1920"></canvas>
       </div>
-      <p class="dims" id="dims">1080 × 1350</p>
+      <p class="dims" id="dims">1080 × 1920</p>
       <div class="field">
         <label for="filePrefix">File name prefix <span class="rangeval" id="filePreview"></span></label>
         <input id="filePrefix" type="text" value="title-card" spellcheck="false">
