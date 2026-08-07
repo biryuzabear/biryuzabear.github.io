@@ -15,6 +15,27 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --max-w: 780px;
   --gap: clamp(1.25rem, 4vw, 2.5rem);
+
+  /* Same two-band ramp the canvas paints with (metallicGradient in sigil.js):
+     warm at the ends, the base colour between, a sheen at each band centre. */
+  --metal-highlight: linear-gradient(100deg,
+    rgb(227, 163, 121) 0%,
+    #e0996a 6.25%,
+    rgb(235, 188, 157) 25%,
+    #e0996a 43.75%,
+    #e0996a 56.25%,
+    rgb(235, 188, 157) 75%,
+    #e0996a 93.75%,
+    rgb(227, 163, 121) 100%);
+  --metal-ink: linear-gradient(100deg,
+    rgb(199, 134, 90) 0%,
+    #c17a4a 6.25%,
+    rgb(212, 162, 128) 25%,
+    #c17a4a 43.75%,
+    #c17a4a 56.25%,
+    rgb(212, 162, 128) 75%,
+    #c17a4a 93.75%,
+    rgb(199, 134, 90) 100%);
 }
 
 @media (min-width: 900px) {
@@ -105,6 +126,19 @@ h1, h2, h3 {
   line-height: 1.25;
   text-wrap: balance;
 }
+
+/* The ramp is tiled at a type-relative width rather than stretched to the box,
+   so the sheen lands on the glyphs whether the heading is one word or a line. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  h1, h2, h3, .site-nav .mark, .metal {
+    background-image: var(--metal-highlight);
+    background-size: 8em 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .metal-ink { background-image: var(--metal-ink); }
+}
 h1 { font-size: clamp(1.7rem, 6vw, 2.6rem); margin: 0 0 0.4rem; }
 h2 { font-size: clamp(1.15rem, 4vw, 1.5rem); margin: 2.5rem 0 0.75rem; }
 
@@ -128,7 +162,12 @@ h2 { font-size: clamp(1.15rem, 4vw, 1.5rem); margin: 2.5rem 0 0.75rem; }
   border: 0;
   height: 1px;
   margin: 2.5rem 0;
-  background: linear-gradient(90deg, var(--line) 0%, transparent 70%);
+  background: linear-gradient(90deg,
+    rgba(224, 153, 106, 0.5) 0%,
+    rgba(193, 122, 74, 0.26) 20%,
+    rgba(235, 188, 157, 0.42) 36%,
+    rgba(193, 122, 74, 0.2) 54%,
+    transparent 78%);
 }
 
 /* ---- plate: shared card surface ---- */
@@ -137,7 +176,9 @@ h2 { font-size: clamp(1.15rem, 4vw, 1.5rem); margin: 2.5rem 0 0.75rem; }
   border: 1px solid var(--line);
   border-radius: 3px;
   padding: 1.1rem 1.25rem;
-  background: linear-gradient(180deg, rgba(193,122,74,0.05), transparent 60%);
+  background:
+    linear-gradient(100deg, transparent 28%, rgba(224,153,106,0.05) 45%, transparent 64%),
+    linear-gradient(180deg, rgba(193,122,74,0.05), transparent 60%);
 }
 .plate::before {
   content: "";
