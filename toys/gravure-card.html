@@ -611,8 +611,9 @@ Assembly</textarea>
           <label for="traceEdgesV">Edge bundles — top / bottom <span class="rangeval" id="traceEdgesVval"></span></label>
           <input id="traceEdgesV" type="range" min="0" max="10" step="1" value="4">
         </div>
-        <p class="hint">Top and bottom bundles route into whatever is left beside
-        the title and subtitle blocks, so they only appear where there is room.</p>
+        <p class="hint">The second slider fills the strips beyond the title and
+        subtitle — short drops from the nearest card edge and long runs in from
+        the sides. Give a block more margin and its strip takes more of them.</p>
         <div class="field">
           <label for="traceLinks">Satellite links <span class="rangeval" id="traceLinksval"></span></label>
           <input id="traceLinks" type="range" min="0" max="12" step="1" value="6">
@@ -1026,36 +1027,49 @@ function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes, e
     anchors.push([p[0], p[1]]);
   };
 
-  /* top / bottom bundles — the same idea turned 90°. The way in is a narrow
-     channel between a text plate and the card edge, so unlike the side bundles
-     these step across in small increments and try progressively thinner
-     bundles at each slot rather than giving the whole slot up on one miss.
-     They run first because a side bundle can always slide down to the next
-     free slot, while a vertical one has nowhere else to go. At count 0 the
-     loop draws no random numbers, so the older nets come out unchanged. */
-  let madeV = 0;
+  /* outer bundles — the strips above the title and below the subtitle. The side
+     bundles below are pinned to the band between the two text blocks, so the
+     two ends of the card were unreachable no matter how many you asked for.
+     Each strip gets short drops from the card edge it touches and long runs in
+     from the left and right, tried thickest-first and skipped when the strip
+     is too shallow to hold a bundle. They go before the side bundles because a
+     side bundle can always slide down to the next free slot; at count 0 the
+     loop draws no random numbers, so older nets come out unchanged. */
   const xMin = 12 * env.u, xMax = env.w - 12 * env.u;
-  const xCursor = [xMin + viaR, xMin + viaR];
-  let safetyV = 0;
-  while (madeV < (edgeCountV || 0) && safetyV++ < 400) {
-    const side = safetyV % 2;
-    const top = side === 0;
-    const x = xCursor[side];
-    if (x > xMax - viaR) {
-      if (xCursor[1 - side] > xMax - viaR) break;
-      continue;
-    }
-    let stride = viaR * 2.2;
+  const queues = (env.outerBands || [])
+    .filter((b) => b.y1 - b.y0 > viaR * 4)
+    .map((b) => {
+      const q = [{ b, from: "left" }, { b, from: "right" }];
+      for (let x = xMin + viaR; x < xMax - viaR; x += viaR * 3.4) q.push({ b, from: b.edge, x });
+      return q;
+    });
+  let madeV = 0, guard = 0;
+  while (madeV < (edgeCountV || 0) && queues.some((q) => q.length) && guard < 400) {
+    const q = queues[guard++ % queues.length];
+    if (!q.length) continue;
+    const { b, from, x } = q.shift();
+    const depth = b.y1 - b.y0;
     for (let lanes = maxLanes; lanes >= 1; lanes--) {
       const halfW = ((lanes - 1) * spacing) / 2 + viaR * 1.5;
-      /* The far end has to clear the text band, otherwise a bundle that cannot
-         get past a full-width plate still "succeeds" as a stub in the margin. */
-      const near = top ? env.yMin + viaR * 3 : env.yMax - viaR * 3;
-      const far = top ? cy - env.ringOut - halfW : cy + env.ringOut + halfW;
-      if (top ? near > far : near < far) continue;
-      const ey = near + rng() * (far - near);
-      const ex = Math.min(xMax - viaR, Math.max(xMin + viaR, x + (rng() - 0.5) * 90 * env.u));
-      const path = pcbPath([x, top ? -viaR * 2 : env.h + viaR * 2], [ex, ey]);
+      if (depth < halfW * 2 + viaR) continue;
+      let p0, end;
+      if (from === "left" || from === "right") {
+        const left = from === "left";
+        const y = b.y0 + halfW + rng() * (depth - halfW * 2);
+        const reach = Math.max(20 * env.u, env.w * 0.42 - 60 * env.u);
+        p0 = [left ? -viaR * 2 : env.w + viaR * 2, y];
+        end = [
+          left ? 60 * env.u + rng() * reach : env.w - 60 * env.u - rng() * reach,
+          Math.min(b.y1 - viaR * 1.5, Math.max(b.y0 + viaR * 1.5, y + (rng() - 0.5) * 40 * env.u)),
+        ];
+      } else {
+        p0 = [x, from === "top" ? -viaR * 2 : env.h + viaR * 2];
+        end = [
+          Math.min(xMax - viaR, Math.max(xMin + viaR, x + (rng() - 0.5) * 40 * env.u)),
+          b.y0 + viaR * 1.5 + rng() * (depth - viaR * 3),
+        ];
+      }
+      const path = pcbPath(p0, end);
       if (!path.dirs.length) continue;
       if (!corridorClear(path.pts, halfW, env, corridors, new Set())) continue;
       const netP = [];
@@ -1064,11 +1078,9 @@ function tracePrims(seed, sats, r0, viaR, env, edgeCount, linkCount, maxLanes, e
       anchors.push([pe[0], pe[1]]);
       nets.push({ kind: "edge", prims: netP });
       commitCorridor(path.pts, halfW);
-      stride = halfW * 2 + env.gap + rng() * 24 * env.u;
       madeV++;
       break;
     }
-    xCursor[side] = x + stride;
   }
 
   /* edge bundles — slot-packed down each side */
@@ -1231,6 +1243,16 @@ function textBoxRects(L, u) {
     ...(textLines("title").length ? [grow(L.titleBox)] : []),
     ...(textLines("subtitle").length ? [grow(L.subBox)] : []),
   ];
+}
+
+/* The strips on the far side of each text block. Without a block there is no
+   strip — the middle band already runs to that end of the card. */
+function outerTraceBands(L, u, h) {
+  const inset = 18 * u, gap = 10 * u;
+  return [
+    ...(textLines("title").length ? [{ y0: inset, y1: L.titleBox[1] - gap, edge: "top" }] : []),
+    ...(textLines("subtitle").length ? [{ y0: L.subBox[3] + gap, y1: h - inset, edge: "bottom" }] : []),
+  ].filter((b) => b.y1 > b.y0);
 }
 
 function planDesignators(seed, count, w, h, cx, cy, rExcl, u, bands, sats) {
@@ -2255,6 +2277,7 @@ function renderCard() {
     gap: 6 * u,
     yMin: tb[0][1] + 10 * u,
     yMax: tb[1][0] - 10 * u,
+    outerBands: outerTraceBands(L, u, H),
     rects: [
       ...textBoxRects(L, u),
       ...($("dwg").value.trim() ? [[W - 40 * u - L.marginSize * 1.3, H * val("marginYR") - H * 0.15, W - 40 * u + L.marginSize * 1.3, H * val("marginYR") + H * 0.15]] : []),
@@ -2630,6 +2653,7 @@ function buildSVG() {
     gap: 6 * u,
     yMin: svgTb[0][1] + 10 * u,
     yMax: svgTb[1][0] - 10 * u,
+    outerBands: outerTraceBands(L, u, H),
     rects: [
       ...textBoxRects(L, u),
       ...($("dwg").value.trim() ? [[W - 40 * u - L.marginSize * 1.3, H * val("marginYR") - H * 0.15, W - 40 * u + L.marginSize * 1.3, H * val("marginYR") + H * 0.15]] : []),
